@@ -3,10 +3,17 @@ offlinemsmtp
 
 Allows you to use ``msmtp`` offline.
 
-To enable ``offlinemsmtp`` using systemd::
+Installation
+------------
 
-    systemctl --user daemon-reload
-    systemctl --user enable --now offlinemsmtp
+Using PyPi::
+
+    pip install --user offlinemsmtp
+
+.. To enable ``offlinemsmtp`` using systemd (doesn't work right now)::
+
+..    systemctl --user daemon-reload
+..    systemctl --user enable --now offlinemsmtp
 
 Other projects
 --------------
