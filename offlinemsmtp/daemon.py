@@ -29,8 +29,13 @@ class Daemon(FileSystemEventHandler):
     def flush_queue(self):
         """Sends all emails in the queue."""
         print('Flushing the send queue...')
+        failed = []
         while not self.queue.empty():
             message = self.queue.get()
+            if not os.path.exists(message):
+                # It was removed, nothing we can do about that.
+                continue
+
             print(f'Sending {message}...')
 
             with open(message, 'rb') as message_content:
@@ -44,8 +49,11 @@ class Daemon(FileSystemEventHandler):
                 print('Message sent successfully. Removing.')
                 os.remove(message)
             else:
-                print('Message did not send. Putting message back into the queue.')
-                self.queue.put(message)
+                print('Message did not send. Putting message back into the queue to try later.')
+                failed.append(message)
+
+        for f in failed:
+            self.queue.put(f)
 
     @staticmethod
     def run(args):

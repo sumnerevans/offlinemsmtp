@@ -12,8 +12,8 @@ def main():
     parser.add_argument(
         '-o',
         '--outbox-directory',
-        required=True,
         dest='dir',
+        default=os.path.expanduser('~/.offlinemsmtp-outbox'),
         help='The directory to use as the outbox.',
     )
     parser.add_argument(
