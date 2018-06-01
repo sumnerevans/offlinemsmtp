@@ -1,12 +1,12 @@
 import os
 import time
-from subprocess import run
 from queue import Queue
+from subprocess import run
 
+from gi.repository import Notify
+from offlinemsmtp import util
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-
-from offlinemsmtp import util
 
 
 class Daemon(FileSystemEventHandler):
@@ -14,21 +14,29 @@ class Daemon(FileSystemEventHandler):
 
     def __init__(self, args):
         self.connected = False
-        self.queue = Queue()
 
+        # Initialize the queue
+        self.queue = Queue()
         for file in os.listdir(args.dir):
             self.queue.put(os.path.join(args.dir, file))
 
+        # Initialize the notifications.
+        Notify.init('offlinemsmtp')
+
+    def notify(self, message):
+        Notify.Notification.new('offlinemsmtp', message).show()
+        print(message)
+
     def on_created(self, event):
         """Detects when a file is created."""
-        print(f'New message: {event.src_path}')
+        self.notify(f'New message: {event.src_path}')
         self.queue.put(event.src_path)
         if util.test_internet():
             self.flush_queue()
 
     def flush_queue(self):
         """Sends all emails in the queue."""
-        print('Flushing the send queue...')
+        self.notify('Flushing the send queue...')
         failed = []
         while not self.queue.empty():
             message = self.queue.get()
@@ -36,7 +44,7 @@ class Daemon(FileSystemEventHandler):
                 # It was removed, nothing we can do about that.
                 continue
 
-            print(f'Sending {message}...')
+            self.notify(f'Sending {message}...')
 
             with open(message, 'rb') as message_content:
                 msmtp_args = message_content.readline().decode()
@@ -46,10 +54,12 @@ class Daemon(FileSystemEventHandler):
 
             sender = run(command, input=message_content)
             if sender.returncode == 0:
-                print('Message sent successfully. Removing.')
+                self.notify('Message sent successfully. Removing.')
                 os.remove(message)
             else:
-                print('Message did not send. Putting message back into the queue to try later.')
+                self.notify(f'Message did not send. Putting message back into '
+                            f'the queue to try later.\n'
+                            f'Error:\n{sender.returncode}')
                 failed.append(message)
 
         for f in failed:

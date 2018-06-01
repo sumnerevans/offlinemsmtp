@@ -40,6 +40,7 @@ setup(
     install_requires=[
         'requests',
         'watchdog',
+        'gobject',
     ],
     data_files=[
         ('/usr/lib/systemd/user/', ['systemd/offlinemsmtp.service']),
