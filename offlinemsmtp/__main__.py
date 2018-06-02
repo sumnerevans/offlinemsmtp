@@ -45,6 +45,7 @@ def main():
     if args.daemon:
         Daemon.run(args)
     else:
+        util.notify('Enqueueing message...')
         root_dir = os.path.expanduser(args.dir)
         filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         with open(os.path.join(root_dir, filename), 'w+') as f:

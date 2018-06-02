@@ -18,6 +18,7 @@ def test_internet():
 
 
 def notify(message, timeout=None, urgency=Notify.Urgency.LOW):
+    """Creates and shows a ``gi.repository.Notify.Notification`` object."""
     global NOTIFICATIONS_INITIALIZED
     print(message)
 
@@ -29,6 +30,7 @@ def notify(message, timeout=None, urgency=Notify.Urgency.LOW):
         Notify.init(_APP_NAME)
         NOTIFICATIONS_INITIALIZED = True
 
+    # Create, show, and return the notification
     notification = Notify.Notification.new(_APP_NAME, message)
     if timeout:
         notification.set_timeout(timeout)

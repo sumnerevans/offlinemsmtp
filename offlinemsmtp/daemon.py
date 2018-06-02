@@ -42,20 +42,28 @@ class Daemon(FileSystemEventHandler):
                 # It was removed, nothing we can do about that.
                 continue
 
+            # Create a sending notification that lives "forever". It will be
+            # closed when the sender process completes.
             sending_notification = util.notify(
                 f'Sending {message}...',
                 timeout=600000,
             )
 
+            # Open the message.
             with open(message, 'rb') as message_content:
                 msmtp_args = message_content.readline().decode()
                 message_content = message_content.read()
 
-            command = ['/usr/bin/msmtp', *msmtp_args.split()]
-
+            # Send the message.
             sender = run(
-                command, input=message_content, stdout=PIPE, stderr=PIPE)
+                ['/usr/bin/msmtp', *msmtp_args.split()],
+                input=message_content,
+                stdout=PIPE,
+                stderr=PIPE,
+            )
             sending_notification.close()
+
+            # Determine whether or not the send was successful or not.
             if sender.returncode == 0:
                 util.notify('Message sent successfully. Removing from queue.')
                 os.remove(message)
@@ -74,6 +82,7 @@ class Daemon(FileSystemEventHandler):
 
     @staticmethod
     def run(args):
+        """Run the offlinemsmtp daemon."""
         util.notify('offlinemsmtp daemon started')
         # Listen on the outbox directory for new files.
         daemon = Daemon(args)
@@ -82,8 +91,10 @@ class Daemon(FileSystemEventHandler):
         observer.start()
 
         try:
+            # Every interval, check whether there's anything to send and see if
+            # there's an internet connection. If there is, try to flush the
+            # send queue.
             while True:
-                # There's something enqueued that hasn't been sent yet.
                 if not daemon.queue.empty() and util.test_internet():
                     daemon.flush_queue()
 
