@@ -1,4 +1,9 @@
 import requests
+from gi.repository import Notify
+
+SILENT = False
+NOTIFICATIONS_INITIALIZED = False
+_APP_NAME = 'offlinemsmtp'
 
 
 def test_internet():
@@ -10,3 +15,23 @@ def test_internet():
         return True
     except requests.ConnectionError:
         return False
+
+
+def notify(message, timeout=None, urgency=Notify.Urgency.LOW):
+    global NOTIFICATIONS_INITIALIZED
+    print(message)
+
+    if SILENT:
+        return
+
+    # Initialize the notifications if necessary.
+    if not NOTIFICATIONS_INITIALIZED:
+        Notify.init(_APP_NAME)
+        NOTIFICATIONS_INITIALIZED = True
+
+    notification = Notify.Notification.new(_APP_NAME, message)
+    if timeout:
+        notification.set_timeout(timeout)
+    notification.set_urgency(urgency)
+    notification.show()
+    return notification

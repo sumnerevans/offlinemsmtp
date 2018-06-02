@@ -3,6 +3,7 @@ import os
 import sys
 from datetime import datetime
 
+from offlinemsmtp import util
 from offlinemsmtp.daemon import Daemon
 
 
@@ -15,13 +16,19 @@ def main():
         dest='dir',
         default=os.path.expanduser('~/.offlinemsmtp-outbox'),
         help=('set the directory to use as the outbox. Defaults to '
-              '~/.offlinemsmtp-outbox'),
+              '~/.offlinemsmtp-outbox.'),
     )
     parser.add_argument(
         '-d',
         '--daemon',
         action='store_true',
         help='run the offlinemsmtp daemon.',
+    )
+    parser.add_argument(
+        '-s',
+        '--silent',
+        action='store_true',
+        help='set to disable all logging and notifications',
     )
     parser.add_argument(
         '-i',
@@ -33,11 +40,11 @@ def main():
     )
 
     args, rest_args = parser.parse_known_args()
+    util.SILENT = args.silent
 
     if args.daemon:
         Daemon.run(args)
     else:
-        print('Enqueueing message...')
         root_dir = os.path.expanduser(args.dir)
         filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         with open(os.path.join(root_dir, filename), 'w+') as f:
