@@ -38,7 +38,6 @@ setup(
     keywords='email msmtp offline',
     packages=['offlinemsmtp'],
     install_requires=[
-        'requests',
         'watchdog',
         'gobject',
     ],

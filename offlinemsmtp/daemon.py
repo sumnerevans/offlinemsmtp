@@ -16,6 +16,7 @@ class Daemon(FileSystemEventHandler):
     def __init__(self, args):
         self.connected = False
         self.silent = args.silent
+        self.config_file = os.path.expanduser(args.file)
 
         # Initialize the queue
         self.queue = Queue()
@@ -27,7 +28,7 @@ class Daemon(FileSystemEventHandler):
         print(f'New message detected: {event.src_path}')
 
         self.queue.put(event.src_path)
-        if util.test_internet():
+        if util.test_internet(self.config_file):
             self.flush_queue()
         else:
             # Only notify if it's not going to be sent immediately.
@@ -55,8 +56,11 @@ class Daemon(FileSystemEventHandler):
                 message_content = message_content.read()
 
             # Send the message.
+            command = [
+                '/usr/bin/msmtp', '-C', self.config_file, *msmtp_args.split()
+            ]
             sender = run(
-                ['/usr/bin/msmtp', *msmtp_args.split()],
+                command,
                 input=message_content,
                 stdout=PIPE,
                 stderr=PIPE,
@@ -95,7 +99,7 @@ class Daemon(FileSystemEventHandler):
             # there's an internet connection. If there is, try to flush the
             # send queue.
             while True:
-                if not daemon.queue.empty() and util.test_internet():
+                if not daemon.queue.empty() and util.test_internet(args.file):
                     daemon.flush_queue()
 
                 time.sleep(args.interval)

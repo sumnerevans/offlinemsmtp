@@ -38,6 +38,12 @@ def main():
         help=('set the interval (in seconds) at which to attempt to flush the '
               'send queue. Defaults to 60.'),
     )
+    parser.add_argument(
+        '-C',
+        '--file',
+        default=os.path.expanduser('~/.msmtprc'),
+        help='the msmtp configuration file to use',
+    )
 
     args, rest_args = parser.parse_known_args()
     util.SILENT = args.silent
