@@ -11,7 +11,7 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='offlinemsmtp',
     version='0.1',
-    release='0.1.0',
+    release='0.1.1',
     url='https://github.com/sumnerevans/offlinemsmtp',
     description='Offline msmtp wrapper',
     long_description=long_description,
@@ -40,6 +40,7 @@ setup(
     install_requires=[
         'requests',
         'watchdog',
+        'gobject',
     ],
     data_files=[
         ('/usr/lib/systemd/user/', ['systemd/offlinemsmtp.service']),

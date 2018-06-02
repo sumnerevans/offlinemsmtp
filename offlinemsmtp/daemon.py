@@ -1,8 +1,9 @@
 import os
 import time
-from subprocess import run
 from queue import Queue
+from subprocess import PIPE, run
 
+from gi.repository import Notify
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
@@ -14,21 +15,26 @@ class Daemon(FileSystemEventHandler):
 
     def __init__(self, args):
         self.connected = False
-        self.queue = Queue()
+        self.silent = args.silent
 
+        # Initialize the queue
+        self.queue = Queue()
         for file in os.listdir(args.dir):
             self.queue.put(os.path.join(args.dir, file))
 
     def on_created(self, event):
         """Detects when a file is created."""
-        print(f'New message: {event.src_path}')
+        print(f'New message detected: {event.src_path}')
+
         self.queue.put(event.src_path)
         if util.test_internet():
             self.flush_queue()
+        else:
+            # Only notify if it's not going to be sent immediately.
+            util.notify(f'New message detected: {event.src_path}')
 
     def flush_queue(self):
         """Sends all emails in the queue."""
-        print('Flushing the send queue...')
         failed = []
         while not self.queue.empty():
             message = self.queue.get()
@@ -36,29 +42,48 @@ class Daemon(FileSystemEventHandler):
                 # It was removed, nothing we can do about that.
                 continue
 
-            print(f'Sending {message}...')
+            # Create a sending notification that lives "forever". It will be
+            # closed when the sender process completes.
+            sending_notification = util.notify(
+                f'Sending {message}...',
+                timeout=600000,
+            )
 
+            # Open the message.
             with open(message, 'rb') as message_content:
                 msmtp_args = message_content.readline().decode()
                 message_content = message_content.read()
 
-            command = ['/usr/bin/msmtp', *msmtp_args.split()]
+            # Send the message.
+            sender = run(
+                ['/usr/bin/msmtp', *msmtp_args.split()],
+                input=message_content,
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            sending_notification.close()
 
-            sender = run(command, input=message_content)
+            # Determine whether or not the send was successful or not.
             if sender.returncode == 0:
-                print('Message sent successfully. Removing.')
+                util.notify('Message sent successfully. Removing from queue.')
                 os.remove(message)
             else:
-                print('Message did not send. Putting message back into the queue to try later.')
+                util.notify(
+                    f'Message did not send. Putting message back into the '
+                    f'queue to try later.\n'
+                    f'Return Code: {sender.returncode}\n'
+                    f'Error: {sender.stderr.decode()}',
+                    urgency=Notify.Urgency.CRITICAL)
                 failed.append(message)
 
+        # Re-enqueue the failed messages.
         for f in failed:
             self.queue.put(f)
 
     @staticmethod
     def run(args):
-        print('Running daemon')
-
+        """Run the offlinemsmtp daemon."""
+        util.notify('offlinemsmtp daemon started')
         # Listen on the outbox directory for new files.
         daemon = Daemon(args)
         observer = Observer()
@@ -66,8 +91,10 @@ class Daemon(FileSystemEventHandler):
         observer.start()
 
         try:
+            # Every interval, check whether there's anything to send and see if
+            # there's an internet connection. If there is, try to flush the
+            # send queue.
             while True:
-                # There's something enqueued that hasn't been sent yet.
                 if not daemon.queue.empty() and util.test_internet():
                     daemon.flush_queue()
 
