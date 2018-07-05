@@ -1,5 +1,5 @@
-import os
 import codecs
+import os
 
 from setuptools import setup
 
@@ -8,12 +8,16 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+name = 'offlinemsmtp'
+version = '0.2'
+release = '0.2.0'
+
 setup(
-    name='offlinemsmtp',
-    version='0.1',
-    release='0.1.1',
-    url='https://github.com/sumnerevans/offlinemsmtp',
-    description='Offline msmtp wrapper',
+    name=name,
+    version=version,
+    release=release,
+    url='https://gitlab.com/sumner/offlinemsmtp',
+    description='msmtp wrapper allowing for offline use',
     long_description=long_description,
     author='Sumner Evans',
     author_email='sumner.evans98@gmail.com',
@@ -40,9 +44,7 @@ setup(
     install_requires=[
         'watchdog',
         'gobject',
-    ],
-    data_files=[
-        ('/usr/lib/systemd/user/', ['systemd/offlinemsmtp.service']),
+        'sphinx',
     ],
 
     # To provide executable scripts, use entry points in preference to the

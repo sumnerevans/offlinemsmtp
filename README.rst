@@ -10,10 +10,25 @@ Using PyPi::
 
     pip install --user offlinemsmtp
 
-.. To enable ``offlinemsmtp`` using systemd (doesn't work right now)::
+Run the daemon using systemd
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-..    systemctl --user daemon-reload
-..    systemctl --user enable --now offlinemsmtp
+Create a file called ``~/.config/systemd/user/offlinemsmtp.service`` with the
+following content::
+
+    [Unit]
+    Description=Offline msmtp
+
+    [Service]
+    ExecStart=/home/sumner/.local/bin/offlinemsmtp --daemon
+
+    [Install]
+    WantedBy=default.target
+
+Then, enable and start ``offlinemsmtp`` using systemd::
+
+    systemctl --user daemon-reload
+    systemctl --user enable --now offlinemsmtp
 
 Other projects
 --------------
