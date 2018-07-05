@@ -14,6 +14,7 @@ class Daemon(FileSystemEventHandler):
     """Listens for changes to the outbox directory."""
 
     def __init__(self, args):
+        """Initialize the daemon."""
         self.connected = False
         self.silent = args.silent
         self.config_file = os.path.expanduser(args.file)
@@ -24,7 +25,7 @@ class Daemon(FileSystemEventHandler):
             self.queue.put(os.path.join(args.dir, file))
 
     def on_created(self, event):
-        """Detects when a file is created."""
+        """Handle file creation."""
         print(f'New message detected: {event.src_path}')
 
         self.queue.put(event.src_path)
