@@ -9,13 +9,11 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 name = 'offlinemsmtp'
-version = '0.2'
-release = '0.2.2'
+version = '0.2.3'
 
 setup(
     name=name,
     version=version,
-    release=release,
     url='https://gitlab.com/sumner/offlinemsmtp',
     description='msmtp wrapper allowing for offline use',
     long_description=long_description,
