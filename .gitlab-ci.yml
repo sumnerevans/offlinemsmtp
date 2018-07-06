@@ -1,0 +1,13 @@
+deploy_pypi:
+  image: python:3.6-alpine
+  stage: deploy
+  before_script:
+    - 'pip install setuptools twine'
+    - 'echo "[pypi]" >> ~/.pypirc'
+    - 'echo "username: ${PYPI_USER}" >> ~/.pypirc'
+    - 'echo "password: ${PYPI_PASSWORD}" >> ~/.pypirc'
+  script:
+    - python setup.py check sdist
+    - twine upload dist/*
+  after_script:
+    - echo "" > ~/.pypirc && rm -f ~/.pypirc
