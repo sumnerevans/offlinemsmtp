@@ -1,3 +1,38 @@
+stages:
+  - build
+  - deploy
+  - verify_deploy
+
+build:
+  image: python:3.6-alpine
+  stage: build
+  script:
+    - python setup.py check sdist
+  artifacts:
+      paths:
+        - dist/*
+
+deploy_test_pypi:
+  image: python:3.6-alpine
+  stage: deploy
+  only:
+    - develop
+  before_script:
+    - 'pip install twine'
+    - './create-pypirc.sh'
+  script:
+    - twine upload -r pypi_test dist/*
+  after_script:
+    - echo "" > ~/.pypirc && rm -f ~/.pypirc
+
+verify_test_deploy:
+  image: python:3.6-alpine
+  stage: verify_deploy
+  only:
+    - develop
+  script:
+    - pip install --index-url https://test.pypi.org/simple/ offlinemsmtp
+
 deploy_pypi:
   image: python:3.6-alpine
   stage: deploy
@@ -5,11 +40,16 @@ deploy_pypi:
     - master
   before_script:
     - 'pip install setuptools twine'
-    - 'echo "[pypi]" >> ~/.pypirc'
-    - 'echo "username: ${PYPI_USER}" >> ~/.pypirc'
-    - 'echo "password: ${PYPI_PASSWORD}" >> ~/.pypirc'
+    - './create-pypirc.sh'
   script:
-    - python setup.py check sdist
     - twine upload dist/*
   after_script:
     - echo "" > ~/.pypirc && rm -f ~/.pypirc
+
+verify_deploy:
+  image: python:3.6-alpine
+  stage: verify_deploy
+  only:
+    - master
+  script:
+    - pip install offlinemsmtp
