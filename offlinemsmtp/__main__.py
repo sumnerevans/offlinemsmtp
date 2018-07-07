@@ -9,7 +9,7 @@ from offlinemsmtp.daemon import Daemon
 
 def main():
     # Parse the arguments
-    parser = argparse.ArgumentParser(description='offlinemsmtp')
+    parser = argparse.ArgumentParser(description='Offline wrapper for msmtp.')
     parser.add_argument(
         '-o',
         '--outbox-directory',
