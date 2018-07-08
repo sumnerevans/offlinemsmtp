@@ -25,7 +25,8 @@ following content::
     Description=Offline msmtp
 
     [Service]
-    ExecStart=/home/sumner/.local/bin/offlinemsmtp --daemon
+    Type=forking
+    ExecStart=/usr/bin/offlinemsmtp --daemon
 
     [Install]
     WantedBy=default.target
