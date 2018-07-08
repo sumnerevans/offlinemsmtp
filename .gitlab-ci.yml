@@ -1,6 +1,5 @@
 stages:
   - build
-  - test_deploy
   - deploy
   - verify_deploy
 
@@ -16,20 +15,6 @@ build:
       paths:
         - dist/*
 
-# Test by deploying to the PyPi test site.
-deploy_test_pypi:
-  image: python:3.6-alpine
-  stage: test_deploy
-  only:
-    - master
-  before_script:
-    - 'pip install twine'
-    - './create-pypirc.sh'
-  script:
-    - twine upload -r pypi_test dist/*
-  after_script:
-    - echo "" > ~/.pypirc && rm -f ~/.pypirc
-
 deploy_pypi:
   image: python:3.6-alpine
   stage: deploy
@@ -39,6 +24,8 @@ deploy_pypi:
     - 'pip install twine'
     - './create-pypirc.sh'
   script:
+    # Upload to the test PyPi instance, then upload to the real one.
+    - twine upload -r pypi_test dist/*
     - twine upload dist/*
   after_script:
     - echo "" > ~/.pypirc && rm -f ~/.pypirc
