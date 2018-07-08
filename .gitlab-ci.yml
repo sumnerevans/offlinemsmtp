@@ -25,14 +25,6 @@ deploy_test_pypi:
   after_script:
     - echo "" > ~/.pypirc && rm -f ~/.pypirc
 
-verify_test_deploy:
-  image: python:3.6-alpine
-  stage: verify_deploy
-  only:
-    - develop
-  script:
-    - pip install --index-url https://test.pypi.org/simple/ offlinemsmtp
-
 deploy_pypi:
   image: python:3.6-alpine
   stage: deploy

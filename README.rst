@@ -10,6 +10,11 @@ Using PyPi::
 
     pip install --user offlinemsmtp
 
+On Arch Linux, you can install the ``offlinemsmtp`` package from the AUR. For
+example, if you use ``aurman``::
+
+    aurman -S offlinemsmtp
+
 Run the daemon using systemd
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
