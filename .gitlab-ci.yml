@@ -6,17 +6,21 @@ stages:
 build:
   image: python:3.6-alpine
   stage: build
+  before_script:
+    - pip install docutils
   script:
-    - python setup.py check sdist
+    - python setup.py check -mrs
+    - python setup.py sdist
   artifacts:
       paths:
         - dist/*
 
+# Test by deploying to the PyPi test site.
 deploy_test_pypi:
   image: python:3.6-alpine
   stage: deploy
   only:
-    - develop
+    - master
   before_script:
     - 'pip install twine'
     - './create-pypirc.sh'
@@ -31,7 +35,7 @@ deploy_pypi:
   only:
     - master
   before_script:
-    - 'pip install setuptools twine'
+    - 'pip install twine'
     - './create-pypirc.sh'
   script:
     - twine upload dist/*

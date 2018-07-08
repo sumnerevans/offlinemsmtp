@@ -1,7 +1,7 @@
 import os
 import time
 from queue import Queue
-from subprocess import PIPE, run
+from subprocess import PIPE, call
 
 from gi.repository import Notify
 from watchdog.events import FileSystemEventHandler
@@ -60,7 +60,7 @@ class Daemon(FileSystemEventHandler):
             command = [
                 '/usr/bin/msmtp', '-C', self.config_file, *msmtp_args.split()
             ]
-            sender = run(
+            sender = call(
                 command,
                 input=message_content,
                 stdout=PIPE,

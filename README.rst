@@ -25,7 +25,8 @@ following content::
     Description=Offline msmtp
 
     [Service]
-    ExecStart=/home/sumner/.local/bin/offlinemsmtp --daemon
+    Type=forking
+    ExecStart=/usr/bin/offlinemsmtp --daemon
 
     [Install]
     WantedBy=default.target
@@ -48,9 +49,9 @@ this command::
     offlinemsmtp --daemon
 
 To enqueue emails, use the ``offlinemsmtp`` executable without ``--daemon``. All
-parameters (besides the ones described below in Options_) are forwarded on to
-``msmtp``. Anything passed in via standard in will be forwarded over standard in
-to ``msmtp`` when the mail is sent.
+parameters (besides the ones described below in `Command Line Arguments`_) are
+forwarded on to ``msmtp``. Anything passed in via standard in will be forwarded
+over standard in to ``msmtp`` when the mail is sent.
 
 Configuration with Mutt
 ^^^^^^^^^^^^^^^^^^^^^^^
