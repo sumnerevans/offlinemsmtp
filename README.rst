@@ -25,7 +25,6 @@ following content::
     Description=Offline msmtp
 
     [Service]
-    Type=forking
     ExecStart=/usr/bin/offlinemsmtp --daemon
 
     [Install]
