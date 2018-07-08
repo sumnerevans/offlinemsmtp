@@ -9,7 +9,7 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 name = 'offlinemsmtp'
-version = '0.2.3'
+version = '0.2.4'
 
 setup(
     name=name,
@@ -39,11 +39,7 @@ setup(
     ],
     keywords='email msmtp offline',
     packages=['offlinemsmtp'],
-    install_requires=[
-        'watchdog',
-        'gobject',
-        'sphinx',
-    ],
+    install_requires=['watchdog', 'gobject', 'sphinx'],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and
