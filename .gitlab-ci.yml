@@ -1,5 +1,6 @@
 stages:
   - build
+  - test_deploy
   - deploy
   - verify_deploy
 
@@ -18,7 +19,7 @@ build:
 # Test by deploying to the PyPi test site.
 deploy_test_pypi:
   image: python:3.6-alpine
-  stage: deploy
+  stage: test_deploy
   only:
     - master
   before_script:
