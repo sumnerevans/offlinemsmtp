@@ -39,7 +39,7 @@ setup(
     ],
     keywords='email msmtp offline',
     packages=['offlinemsmtp'],
-    install_requires=['watchdog', 'gobject', 'sphinx'],
+    install_requires=['watchdog', 'PyGObject', 'sphinx'],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and
