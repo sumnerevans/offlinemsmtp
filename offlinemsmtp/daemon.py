@@ -78,6 +78,7 @@ class Daemon(FileSystemEventHandler):
                     f'queue to try later.\n'
                     f'Return Code: {sender.returncode}\n'
                     f'Error: {sender.stderr.decode()}',
+                    timeout=600000,
                     urgency=Notify.Urgency.CRITICAL)
                 failed.append(message)
 
