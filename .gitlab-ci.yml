@@ -36,4 +36,4 @@ verify_deploy:
   only:
     - master
   script:
-    - pip install offlinemsmtp
+    - sudo pip install offlinemsmtp
