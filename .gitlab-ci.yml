@@ -1,7 +1,7 @@
 stages:
   - build
   - deploy
-  - verify_deploy
+  - verify
 
 build:
   image: python:3.6-alpine
@@ -32,8 +32,10 @@ deploy_pypi:
 
 verify_deploy:
   image: python:3.6-alpine
-  stage: verify_deploy
+  stage: verify
   only:
     - master
+  before_script:
+    - pip install pkgconfig
   script:
-    - sudo pip install offlinemsmtp
+    - pip install offlinemsmtp

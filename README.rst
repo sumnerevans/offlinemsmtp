@@ -11,9 +11,9 @@ Using PyPi::
     pip install --user offlinemsmtp
 
 On Arch Linux, you can install the ``offlinemsmtp`` package from the AUR. For
-example, if you use ``aurman``::
+example, if you use ``yay``::
 
-    aurman -S offlinemsmtp
+    yay -S offlinemsmtp
 
 Run the daemon using systemd
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -73,6 +73,8 @@ offlinemsmtp accepts a number of command line arguments:
 - ``-i INTERVAL``, ``--interval INTERVAL`` - set the interval (in seconds) at
   which to attempt to flush the send queue. Defaults to 60.
 - ``-C FILE``, ``--file FILE`` - the msmtp configuration file to use.
+- ``--send-mail-file FILE`` - only send mail if this file exists (defaults to
+  ``None`` meaning that no file is required for mail sending to be enabled)
 
 Other projects
 --------------

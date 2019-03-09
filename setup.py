@@ -9,7 +9,7 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 name = 'offlinemsmtp'
-version = '0.3.3'
+version = '0.3.4'
 
 setup(
     name=name,
