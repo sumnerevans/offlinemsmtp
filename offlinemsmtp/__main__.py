@@ -44,6 +44,11 @@ def main():
         default=os.path.expanduser('~/.msmtprc'),
         help='the msmtp configuration file to use',
     )
+    parser.add_argument(
+        '--send-mail-file',
+        default=None,
+        help='only send mail if this file exists',
+    )
 
     args, rest_args = parser.parse_known_args()
     util.SILENT = args.silent

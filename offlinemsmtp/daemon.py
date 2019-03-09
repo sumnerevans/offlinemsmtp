@@ -18,11 +18,16 @@ class Daemon(FileSystemEventHandler):
         self.connected = False
         self.silent = args.silent
         self.config_file = os.path.expanduser(args.file)
+        self.send_mail_file = args.send_mail_file
 
         # Initialize the queue
         self.queue = Queue()
         for file in os.listdir(args.dir):
             self.queue.put(os.path.join(args.dir, file))
+
+    def send_enabled(self):
+        return (self.send_mail_file is None
+                or os.path.exists(self.send_mail_file))
 
     def on_created(self, event):
         """Handle file creation."""
@@ -37,6 +42,9 @@ class Daemon(FileSystemEventHandler):
 
     def flush_queue(self):
         """Sends all emails in the queue."""
+        if not self.send_enabled():
+            return
+
         failed = []
         while not self.queue.empty():
             message = self.queue.get()
