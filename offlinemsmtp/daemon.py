@@ -4,10 +4,9 @@ from queue import Queue
 from subprocess import PIPE, run
 
 from gi.repository import Notify
+from offlinemsmtp import util
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-
-from offlinemsmtp import util
 
 
 class Daemon(FileSystemEventHandler):
@@ -43,6 +42,7 @@ class Daemon(FileSystemEventHandler):
     def flush_queue(self):
         """Sends all emails in the queue."""
         if not self.send_enabled():
+            util.notify('Sending email disabled', timeout=5000)
             return
 
         failed = []
