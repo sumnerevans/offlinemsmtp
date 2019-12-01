@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+flake8 = "*"
+mypy = "*"
+flake8-pep3101 = "*"
+docutils = "*"
+twine = "*"
+
+[packages]
+offlinemsmtp = {editable = true,path = "."}
+
+[requires]
+python_version = "3.8"

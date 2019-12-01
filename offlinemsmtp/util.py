@@ -2,6 +2,8 @@ import os
 import re
 from subprocess import run
 
+import gi
+gi.require_version('Notify', '0.7')
 from gi.repository import Notify
 
 SILENT = False

@@ -3,6 +3,8 @@ import time
 from queue import Queue
 from subprocess import PIPE, run
 
+import gi
+gi.require_version('Notify', '0.7')
 from gi.repository import Notify
 from offlinemsmtp import util
 from watchdog.events import FileSystemEventHandler
