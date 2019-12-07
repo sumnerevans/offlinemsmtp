@@ -1,9 +1,7 @@
 .. image:: logo/logo.png
    :width: 50%
    :align: center
-
-offlinemsmtp
-============
+   :alt: offlinemsmtp
 
 Allows you to use ``msmtp`` offline.
 
