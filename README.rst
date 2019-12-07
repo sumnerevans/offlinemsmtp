@@ -1,4 +1,4 @@
-.. image:: logo/logo.png
+.. image:: https://gitlab.com/sumner/offlinemsmtp/raw/master/logo/logo.png
    :width: 50%
    :align: center
    :alt: offlinemsmtp
