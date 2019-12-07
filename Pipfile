@@ -9,6 +9,7 @@ mypy = "*"
 flake8-pep3101 = "*"
 docutils = "*"
 twine = "*"
+rst2html5 = "*"
 
 [packages]
 offlinemsmtp = {editable = true,path = "."}

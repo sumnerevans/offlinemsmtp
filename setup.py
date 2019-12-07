@@ -8,11 +8,15 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-name = 'offlinemsmtp'
-version = '0.3.4'
+# Find the version
+with codecs.open(os.path.join(here, 'offlinemsmtp/__init__.py'), encoding='utf-8') as f:
+    for line in f:
+        if line.startswith('__version__'):
+            version = eval(line.split()[-1])
+            break
 
 setup(
-    name=name,
+    name='offlinemsmtp',
     version=version,
     url='https://gitlab.com/sumner/offlinemsmtp',
     description='msmtp wrapper allowing for offline use',
