@@ -13,7 +13,6 @@ from watchdog.observers import Observer
 
 class Daemon(FileSystemEventHandler):
     """Listens for changes to the outbox directory."""
-
     def __init__(self, args):
         """Initialize the daemon."""
         self.connected = False
@@ -35,11 +34,7 @@ class Daemon(FileSystemEventHandler):
         print(f'New message detected: {event.src_path}')
 
         self.queue.put(event.src_path)
-        if util.test_internet(self.config_file):
-            self.flush_queue()
-        else:
-            # Only notify if it's not going to be sent immediately.
-            util.notify(f'New message detected: {event.src_path}')
+        self.flush_queue()
 
     def flush_queue(self):
         """Sends all emails in the queue."""
@@ -54,17 +49,27 @@ class Daemon(FileSystemEventHandler):
                 # It was removed, nothing we can do about that.
                 continue
 
+            # Open the message.
+            with open(message, 'rb') as message_content:
+                msmtp_args = message_content.readline().decode()
+                message_content = message_content.read()
+
+            account = 'ohea' # TODO
+
+            if not util.test_internet(self.config_file, account):
+                util.notify(
+                    f'Cannot connect to SMTP server to send: {message}',
+                    timeout=5000,
+                )
+                failed.append(message)
+                continue
+
             # Create a sending notification that lives "forever". It will be
             # closed when the sender process completes.
             sending_notification = util.notify(
                 f'Sending {message}...',
                 timeout=600000,
             )
-
-            # Open the message.
-            with open(message, 'rb') as message_content:
-                msmtp_args = message_content.readline().decode()
-                message_content = message_content.read()
 
             # Send the message.
             command = [
@@ -111,7 +116,7 @@ class Daemon(FileSystemEventHandler):
             # there's an internet connection. If there is, try to flush the
             # send queue.
             while True:
-                if not daemon.queue.empty() and util.test_internet(args.file):
+                if not daemon.queue.empty():
                     daemon.flush_queue()
 
                 time.sleep(args.interval)

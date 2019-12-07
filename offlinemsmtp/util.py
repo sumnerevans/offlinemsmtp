@@ -11,9 +11,10 @@ NOTIFICATIONS_INITIALIZED = False
 _APP_NAME = 'offlinemsmtp'
 
 
-def test_internet(msmtp_config_file):
+def test_internet(msmtp_config_file, account):
     """
-    Tests whether or not the computer is currently connected to the internet.
+    Tests whether or not the computer can connect to the given account's SMTP
+    server.
     """
 
     # Extract the hosts from the configuration file.
