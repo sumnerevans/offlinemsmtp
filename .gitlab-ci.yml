@@ -3,6 +3,7 @@ stages:
   - build
   - deploy
   - verify
+  - release
 
 lint:
   image: ubuntu:18.10
