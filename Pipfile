@@ -10,6 +10,9 @@ flake8-pep3101 = "*"
 docutils = "*"
 twine = "*"
 rst2html5 = "*"
+rope = "*"
+jedi = "*"
+yapf = "*"
 
 [packages]
 offlinemsmtp = {editable = true,path = "."}
