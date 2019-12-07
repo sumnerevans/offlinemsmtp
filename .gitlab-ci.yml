@@ -1,7 +1,21 @@
 stages:
+  - test
   - build
   - deploy
   - verify
+
+lint:
+  image: ubuntu:18.10
+  stage: test
+  before_script:
+    - apt update
+    - apt install -y python3-pip libcairo2-dev pkg-config gobject-introspection
+    - pip3 install -e .
+    - pip3 install flake8 flake8-pep3101 mypy
+  script:
+    - python3 setup.py check -mrs
+    - flake8
+    - mypy offlinemsmtp
 
 build:
   image: python:3.6-alpine
@@ -19,7 +33,9 @@ deploy_pypi:
   image: python:3.6-alpine
   stage: deploy
   only:
-    - master
+    variables:
+      # Only verify the deploy if it's a version tag.
+      - $CI_COMMIT_TAG =~ /^v.*/
   before_script:
     - 'pip install twine'
     - './create-pypirc.sh'
@@ -34,8 +50,24 @@ verify_deploy:
   image: python:3.6-alpine
   stage: verify
   only:
-    - master
+    variables:
+      # Only verify the deploy if it's a version tag.
+      - $CI_COMMIT_TAG =~ /^v.*/
   before_script:
     - pip install pkgconfig
   script:
     - pip install offlinemsmtp
+
+publish_release:
+  image: python:3.8-alpine
+  stage: release
+  only:
+    variables:
+      # Only verify the deploy if it's a version tag.
+      - $CI_COMMIT_TAG =~ /^v.*/
+  before_script:
+    - apk add gcc musl-dev
+    - pip install pipenv
+    - pipenv install --dev
+  script:
+    - ./cicd/publish-gitlab-release.sh
