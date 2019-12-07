@@ -1,7 +1,3 @@
-import os
-import re
-from subprocess import run
-
 import gi
 gi.require_version('Notify', '0.7')
 from gi.repository import Notify
@@ -9,27 +5,6 @@ from gi.repository import Notify
 SILENT = False
 NOTIFICATIONS_INITIALIZED = False
 _APP_NAME = 'offlinemsmtp'
-
-
-def test_internet(msmtp_config_file):
-    """
-    Tests whether or not the computer is currently connected to the internet.
-    """
-
-    # Extract the hosts from the configuration file.
-    host_re = re.compile(r'^host (.*)$')
-    hosts = []
-    with open(os.path.expanduser(msmtp_config_file)) as config_file:
-        for line in config_file:
-            match = host_re.match(line)
-            if match:
-                hosts.append(match.group(1))
-
-    # See if we can ping them.
-    for h in hosts:
-        if run(['ping', '-c', '1', h]).returncode != 0:
-            return False
-    return True
 
 
 def notify(message, timeout=None, urgency=Notify.Urgency.LOW):
