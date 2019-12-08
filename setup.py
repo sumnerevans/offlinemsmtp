@@ -1,15 +1,14 @@
-import codecs
 import os
 
 from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 # Find the version
-with codecs.open(os.path.join(here, 'offlinemsmtp/__init__.py'), encoding='utf-8') as f:
+with open(os.path.join(here, 'offlinemsmtp/__init__.py'), encoding='utf-8') as f:
     for line in f:
         if line.startswith('__version__'):
             version = eval(line.split()[-1])
