@@ -8,14 +8,17 @@ Allows you to use ``msmtp`` offline.
 Installation
 ------------
 
-Using PyPi::
+Using PyPi_::
 
     pip install --user offlinemsmtp
 
-On Arch Linux, you can install the ``offlinemsmtp`` package from the AUR. For
+On Arch Linux, you can install the ``offlinemsmtp`` package from the AUR_. For
 example, if you use ``yay``::
 
     yay -S offlinemsmtp
+
+.. _PyPi: https://pypi.org/project/offlinemsmtp/
+.. _AUR: https://aur.archlinux.org/packages/offlinemsmtp/
 
 Run the daemon using systemd
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
