@@ -24,7 +24,7 @@ Create a file called ``~/.config/systemd/user/offlinemsmtp.service`` with the
 following content::
 
     [Unit]
-    Description=Offline msmtp
+    Description=offlinemsmtp
 
     [Service]
     ExecStart=/usr/bin/offlinemsmtp --daemon
@@ -40,9 +40,9 @@ Then, enable and start ``offlinemsmtp`` using systemd::
 Usage
 -----
 
-Offlinemsmtp has two components: a daemon for listening to the outbox folder and
-sending the mail when the network is available and a enqueuer for adding mail to
-the send queue.
+``offlinemsmtp`` has two components: a daemon for listening to the outbox folder
+and sending the mail when the network is available and a enqueuer for adding
+mail to the send queue.
 
 To run the daemon in the current command line (this is useful for testing), run
 this command::
