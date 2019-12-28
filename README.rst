@@ -3,19 +3,38 @@
    :align: center
    :alt: offlinemsmtp
 
-Allows you to use ``msmtp`` offline.
+Allows you to use ``msmtp`` offline by queuing email until you have an internet
+connection.
+
+Features
+--------
+
+* Runs as a daemon and (at a configurable time interval) attempts to send the
+  mail in the queue directory.
+* Drop-in replacement for ``msmtp`` in your mutt config.
+* Only attempts to send the queued email message if it can connect to the
+  configured SMTP server.
+* When a new email message comes into the queue and you are already online,
+  ``offlinemsmtp`` will send it immediately.
+* Integrates with system notifications so that you are notified when mail is
+  being sent.
+* Disable/enable sending of mail by the presence/absence of a file. This is
+  useful if you want to have some sort of "offline mode".
 
 Installation
 ------------
 
-Using PyPi::
+Using PyPi_::
 
     pip install --user offlinemsmtp
 
-On Arch Linux, you can install the ``offlinemsmtp`` package from the AUR. For
+On Arch Linux, you can install the ``offlinemsmtp`` package from the AUR_. For
 example, if you use ``yay``::
 
     yay -S offlinemsmtp
+
+.. _PyPi: https://pypi.org/project/offlinemsmtp/
+.. _AUR: https://aur.archlinux.org/packages/offlinemsmtp/
 
 Run the daemon using systemd
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -81,7 +100,9 @@ offlinemsmtp accepts a number of command line arguments:
 Other projects
 --------------
 
+- https://github.com/marlam/msmtp-mirror/tree/master/scripts/msmtpqueue - this
+  is included with ``msmtp``, but doesn't have all of the features that I want.
 - https://github.com/dcbaker/py-mailqueued - looks cool, I didn't see it when I
   was researching, but it's probably better than my implementation, even thought
-  I had a lot of fun doing mine
-- https://github.com/venkytv/msmtp-offline - it's written in Ruby
+  I had a lot of fun doing mine.
+- https://github.com/venkytv/msmtp-offline - it's written in Ruby.
