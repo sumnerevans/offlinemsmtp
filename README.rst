@@ -40,7 +40,9 @@ Run the daemon using systemd
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create a file called ``~/.config/systemd/user/offlinemsmtp.service`` with the
-following content::
+following content (if you installed via the AUR package, a service file was
+already created for you in ``/usr/lib/systemd/user`` so you only need to do this
+step if you want to customize the parameters passed to the daemon)::
 
     [Unit]
     Description=offlinemsmtp
