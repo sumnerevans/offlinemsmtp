@@ -133,8 +133,12 @@ class Daemon(FileSystemEventHandler):
         # Try to connect to the socket.
         sock = socket.socket()
         sock.settimeout(2)  # 2 second timeout
-        socket_open = sock.connect_ex((host, port))
-        sock.close()
+        try:
+            socket_open = sock.connect_ex((host, port))
+        except socket.gaierror:
+            return False
+        finally:
+            sock.close()
 
         # Notify if it's not available.
         if socket_open != 0:
