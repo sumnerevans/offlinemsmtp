@@ -1,3 +1,11 @@
+v0.3.6
+======
+
+* Added better README documentation.
+* The AUR package now automatically installs the ``.service`` file to
+  ``/usr/lib/systemd/user``.
+* Convert to use the logging library instead of pure print.
+
 v0.3.5
 ======
 
