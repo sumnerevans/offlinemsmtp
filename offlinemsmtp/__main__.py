@@ -1,6 +1,8 @@
 import argparse
 import os
+import logging
 import sys
+
 from datetime import datetime
 
 from offlinemsmtp import util
@@ -49,11 +51,34 @@ def main():
         default=None,
         help='only send mail if this file exists',
     )
+    parser.add_argument(
+        '-l',
+        '--logfile',
+        help='the filename to send logs to',
+    )
+    parser.add_argument(
+        '-m',
+        '--loglevel',
+        help='the minium level of logging to do',
+        default='WARNING',
+    )
 
     args, rest_args = parser.parse_known_args()
     util.SILENT = args.silent
 
+    min_log_level = getattr(logging, args.loglevel.upper(), None)
+    if not isinstance(min_log_level, int):
+        logging.error(f'Invalid log level: {args.loglevel.upper()}.')
+        min_log_level = logging.WARNING
+
+    logging.basicConfig(
+        filename=args.logfile,
+        level=min_log_level,
+        format='%(asctime)s:%(levelname)s:%(name)s:%(module)s:%(message)s',
+    )
+
     if args.daemon:
+        logging.info('Starting the offlinemsmtp daemon.')
         Daemon.run(args)
     else:
         root_dir = os.path.expanduser(args.dir)

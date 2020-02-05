@@ -1,3 +1,5 @@
+import logging
+
 import gi
 gi.require_version('Notify', '0.7')
 from gi.repository import Notify
@@ -10,7 +12,7 @@ _APP_NAME = 'offlinemsmtp'
 def notify(message, timeout=None, urgency=Notify.Urgency.LOW):
     """Creates and shows a ``gi.repository.Notify.Notification`` object."""
     global NOTIFICATIONS_INITIALIZED
-    print(message)
+    logging.info(message)
 
     if SILENT:
         return

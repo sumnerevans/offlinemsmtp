@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import socket
@@ -34,7 +35,7 @@ class Daemon(FileSystemEventHandler):
 
     def on_created(self, event):
         """Handle file creation."""
-        print(f'New message detected: {event.src_path}')
+        logging.info(f'New message detected: {event.src_path}')
 
         self.queue.put(event.src_path)
         self.flush_queue()
