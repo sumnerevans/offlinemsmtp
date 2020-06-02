@@ -1,9 +1,8 @@
 import logging
-import os
 import re
 import socket
 import time
-
+from pathlib import Path
 from queue import Queue
 from subprocess import PIPE, run
 
@@ -23,22 +22,26 @@ class Daemon(FileSystemEventHandler):
         """Initialize the daemon."""
         self.connected = False
         self.silent = args.silent
-        self.config_file = os.path.expanduser(args.file)
-        self.send_mail_file = args.send_mail_file
+        self.config_file = Path(args.file).resolve() if args.file else None
+        self.send_mail_file = (
+            Path(args.send_mail_file).resolve() if args.send_mail_file else None
+        )
+        self.root_dir = Path(args.dir).resolve() if args.dir else None
 
         # Initialize the queue
         self.queue = Queue()
-        for file in os.listdir(args.dir):
-            self.queue.put(os.path.join(args.dir, file))
+        self.root_dir.mkdir(parents=True, exist_ok=True)
+        for file in self.root_dir.iterdir():
+            self.queue.put(self.root_dir.joinpath(file))
 
     def send_enabled(self):
-        return self.send_mail_file is None or os.path.exists(self.send_mail_file)
+        return self.send_mail_file is None or self.send_mail_file.exists()
 
     def on_created(self, event):
         """Handle file creation."""
         logging.info(f"New message detected: {event.src_path}")
 
-        self.queue.put(event.src_path)
+        self.queue.put(Path(event.src_path))
         self.flush_queue()
 
     def flush_queue(self):
@@ -49,23 +52,25 @@ class Daemon(FileSystemEventHandler):
 
         failed = []
         while not self.queue.empty():
-            message = self.queue.get()
-            if not os.path.exists(message):
+            message_path = self.queue.get()
+            if not message_path.exists():
                 # It was removed, nothing we can do about that.
                 continue
 
             # Open the message.
-            with open(message, "rb") as message_content:
+            with open(message_path, "rb") as message_content:
                 msmtp_args = message_content.readline().decode()
                 message_content = message_content.read()
 
             if not self.can_send_message(msmtp_args, message_content):
-                failed.append(message)
+                failed.append(message_path)
                 continue
 
             # Create a sending notification that lives "forever". It will be
             # closed when the sender process completes.
-            sending_notification = util.notify(f"Sending {message}...", timeout=600000)
+            sending_notification = util.notify(
+                f"Sending {message_path}...", timeout=600000
+            )
 
             # Send the message.
             sender = run(
@@ -79,7 +84,7 @@ class Daemon(FileSystemEventHandler):
             # Determine whether or not the send was successful or not.
             if sender.returncode == 0:
                 util.notify("Message sent successfully. Removing from queue.")
-                os.remove(message)
+                message_path.unlink()
             else:
                 util.notify(
                     f"Message did not send. Putting message back into the "
@@ -89,7 +94,7 @@ class Daemon(FileSystemEventHandler):
                     timeout=30000,  # 30 seconds
                     urgency=Notify.Urgency.CRITICAL,
                 )
-                failed.append(message)
+                failed.append(message_path)
 
         # Re-enqueue the failed messages.
         for f in failed:
@@ -103,7 +108,7 @@ class Daemon(FileSystemEventHandler):
         args = ["/usr/bin/msmtp"]
         if pretend:
             args.append("-P")
-        args += ["-C", self.config_file, *msmtp_args.split()]
+        args += ["-C", str(self.config_file), *msmtp_args.split()]
         return args
 
     def can_send_message(self, msmtp_args, message_content):
@@ -163,7 +168,7 @@ class Daemon(FileSystemEventHandler):
         # Listen on the outbox directory for new files.
         daemon = Daemon(args)
         observer = Observer()
-        observer.schedule(daemon, args.dir, recursive=True)
+        observer.schedule(daemon, str(args.dir.resolve()), recursive=True)
         observer.start()
 
         try:

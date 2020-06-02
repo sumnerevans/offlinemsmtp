@@ -1,5 +1,4 @@
 import argparse
-import os
 import logging
 import sys
 from datetime import datetime
@@ -44,7 +43,7 @@ def main():
     parser.add_argument(
         "-C",
         "--file",
-        default=Path.home().joinpath("~/.msmtprc"),
+        default=Path.home().joinpath(".msmtprc"),
         help="the msmtp configuration file to use",
     )
     parser.add_argument(
@@ -57,8 +56,16 @@ def main():
         "-m", "--loglevel", help="the minium level of logging to do", default="WARNING",
     )
 
-    print(sys.argv)
-    args, rest_args = parser.parse_known_args()
+    if "--" in sys.argv:
+        dash_arg_pos = sys.argv.index("--")
+        before, after = (
+            sys.argv[1:dash_arg_pos],  # Ignore argv[0] which is the program itself.
+            sys.argv[dash_arg_pos + 1 :],
+        )
+        args, rest_args = parser.parse_known_args(before)
+        rest_args.extend(after)
+    else:
+        args, rest_args = parser.parse_known_args()
     util.SILENT = args.silent
 
     min_log_level = getattr(logging, args.loglevel.upper(), None)

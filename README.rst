@@ -71,7 +71,7 @@ this command::
     offlinemsmtp --daemon
 
 To enqueue emails, use the ``offlinemsmtp`` executable without ``--daemon``. All
-parameters (besides the ones described below in `Command Line Arguments`_) are
+parameters (with a few caveats described below in `Command Line Arguments`_) are
 forwarded on to ``msmtp``. Anything passed in via standard in will be forwarded
 over standard in to ``msmtp`` when the mail is sent.
 
@@ -98,6 +98,11 @@ offlinemsmtp accepts a number of command line arguments:
 - ``-C FILE``, ``--file FILE`` - the msmtp configuration file to use.
 - ``--send-mail-file FILE`` - only send mail if this file exists (defaults to
   ``None`` meaning that no file is required for mail sending to be enabled)
+- All remaining arguments are passed to ``msmtp``. The ``-C`` argument is
+  automatically passed to ``msmtp``.
+- Anything after a special ``--`` argument will be passed to ``msmtp``. This
+  allows you to pass arguments that may conflict with ``offlinemsmtp`` arguments
+  to ``msmtp``.
 
 Other projects
 --------------
