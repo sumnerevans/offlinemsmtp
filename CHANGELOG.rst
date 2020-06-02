@@ -1,6 +1,8 @@
 v0.3.6
 ======
 
+* Added the ability to to delimit arguments that should always be sent to
+  ``msmtp`` using ``--``.
 * Added better README documentation.
 * The AUR package now automatically installs the ``.service`` file to
   ``/usr/lib/systemd/user``.
