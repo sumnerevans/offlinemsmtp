@@ -6,17 +6,18 @@ stages:
   - release
 
 lint:
-  image: ubuntu:18.10
+  image: ubuntu:20.04
   stage: test
   before_script:
     - apt update
     - apt install -y python3-pip libcairo2-dev pkg-config gobject-introspection
     - pip3 install -e .
-    - pip3 install flake8 flake8-pep3101 mypy
+    - pip3 install flake8 flake8-pep3101 mypy black
   script:
     - python3 setup.py check -mrs
     - flake8
     - mypy offlinemsmtp
+    - black --check .
 
 build:
   image: python:3.6
@@ -48,7 +49,7 @@ deploy_pypi:
     - echo "" > ~/.pypirc && rm -f ~/.pypirc
 
 verify_deploy:
-  image: ubuntu:18.10
+  image: ubuntu:20.04
   stage: verify
   only:
     variables:
