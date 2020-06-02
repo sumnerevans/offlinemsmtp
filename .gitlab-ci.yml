@@ -11,7 +11,7 @@ lint:
   before_script:
     - apt update
     - export TZ=America/Denver DEBIAN_FRONTEND=noninteractive
-    - apt install -y python3-pip libcairo2-dev pkg-config gobject-introspection
+    - apt install -y python3-pip libcairo2-dev pkg-config gobject-introspection libgirepository1.0-dev
     - pip3 install -e .
     - pip3 install flake8 flake8-pep3101 mypy black
   script:
@@ -59,7 +59,7 @@ verify_deploy:
   before_script:
     - apt update
     - export TZ=America/Denver DEBIAN_FRONTEND=noninteractive
-    - apt install -y python3-pip libcairo2-dev pkg-config gobject-introspection
+    - apt install -y python3-pip libcairo2-dev pkg-config gobject-introspection libgirepository1.0-dev
   script:
     - pip3 install offlinemsmtp
 
