@@ -2,8 +2,8 @@ import argparse
 import os
 import logging
 import sys
-
 from datetime import datetime
+from pathlib import Path
 
 from offlinemsmtp import util
 from offlinemsmtp.daemon import Daemon
@@ -11,87 +11,83 @@ from offlinemsmtp.daemon import Daemon
 
 def main():
     # Parse the arguments
-    parser = argparse.ArgumentParser(description='Offline wrapper for msmtp.')
+    parser = argparse.ArgumentParser(description="Offline wrapper for msmtp.")
     parser.add_argument(
-        '-o',
-        '--outbox-directory',
-        dest='dir',
-        default=os.path.expanduser('~/.offlinemsmtp-outbox'),
-        help=('set the directory to use as the outbox. Defaults to '
-              '~/.offlinemsmtp-outbox.'),
+        "-o",
+        "--outbox-directory",
+        dest="dir",
+        default=Path.home().joinpath(".offlinemsmtp-outbox"),
+        help=(
+            "set the directory to use as the outbox. Defaults to "
+            "~/.offlinemsmtp-outbox."
+        ),
     )
     parser.add_argument(
-        '-d',
-        '--daemon',
-        action='store_true',
-        help='run the offlinemsmtp daemon.',
+        "-d", "--daemon", action="store_true", help="run the offlinemsmtp daemon.",
     )
     parser.add_argument(
-        '-s',
-        '--silent',
-        action='store_true',
-        help='set to disable all logging and notifications',
+        "-s",
+        "--silent",
+        action="store_true",
+        help="set to disable all logging and notifications",
     )
     parser.add_argument(
-        '-i',
-        '--interval',
+        "-i",
+        "--interval",
         type=int,
         default=60,
-        help=('set the interval (in seconds) at which to attempt to flush the '
-              'send queue. Defaults to 60.'),
+        help=(
+            "set the interval (in seconds) at which to attempt to flush the send queue."
+            " Defaults to 60."
+        ),
     )
     parser.add_argument(
-        '-C',
-        '--file',
-        default=os.path.expanduser('~/.msmtprc'),
-        help='the msmtp configuration file to use',
+        "-C",
+        "--file",
+        default=Path.home().joinpath("~/.msmtprc"),
+        help="the msmtp configuration file to use",
     )
     parser.add_argument(
-        '--send-mail-file',
-        default=None,
-        help='only send mail if this file exists',
+        "--send-mail-file", default=None, help="only send mail if this file exists",
     )
     parser.add_argument(
-        '-l',
-        '--logfile',
-        help='the filename to send logs to',
+        "-l", "--logfile", help="the filename to send logs to",
     )
     parser.add_argument(
-        '-m',
-        '--loglevel',
-        help='the minium level of logging to do',
-        default='WARNING',
+        "-m", "--loglevel", help="the minium level of logging to do", default="WARNING",
     )
 
+    print(sys.argv)
     args, rest_args = parser.parse_known_args()
     util.SILENT = args.silent
 
     min_log_level = getattr(logging, args.loglevel.upper(), None)
     if not isinstance(min_log_level, int):
-        logging.error(f'Invalid log level: {args.loglevel.upper()}.')
+        logging.error(f"Invalid log level: {args.loglevel.upper()}.")
         min_log_level = logging.WARNING
 
     logging.basicConfig(
         filename=args.logfile,
         level=min_log_level,
-        format='%(asctime)s:%(levelname)s:%(name)s:%(module)s:%(message)s',
+        format="%(asctime)s:%(levelname)s:%(name)s:%(module)s:%(message)s",
     )
 
     if args.daemon:
-        logging.info('Starting the offlinemsmtp daemon.')
+        logging.info("Starting the offlinemsmtp daemon.")
         Daemon.run(args)
     else:
-        root_dir = os.path.expanduser(args.dir)
-        filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        with open(os.path.join(root_dir, filename), 'w+') as f:
+        root_dir = Path(args.dir).resolve()
+        root_dir.mkdir(parents=True, exist_ok=True)
+        filename = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        with open(root_dir.joinpath(filename), "w+") as f:
             # Write the arguments on the first line so that the daemon can pass
             # them through.
-            f.write(' '.join(rest_args) + '\n')
+            f.write(" ".join(rest_args) + "\n")
 
             # Write all of stdout to the file.
             for line in sys.stdin:
                 f.write(line)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -4,18 +4,21 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-flake8 = "*"
-mypy = "*"
-flake8-pep3101 = "*"
+black = "*"
 docutils = "*"
-twine = "*"
-rst2html5 = "*"
-rope = "*"
+flake8 = "*"
+flake8-pep3101 = "*"
 jedi = "*"
-yapf = "*"
+mypy = "*"
+rope = "*"
+rst2html5 = "*"
+twine = "*"
 
 [packages]
 offlinemsmtp = {editable = true,path = "."}
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
