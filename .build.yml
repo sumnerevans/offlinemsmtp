@@ -3,15 +3,26 @@ packages:
   - python-poetry
 sources:
   - https://git.sr.ht/~sumner/offlinemsmtp
+secrets:
+  - 2fb5fd72-fa96-46c6-ab90-6b7cabebba16
 tasks:
   - lint: |
       cd offlinemsmtp
       poetry install
-      python setup.py check -mrs
-      flake8
-      mypy offlinemsmtp
-      black --check .
+      poetry run python setup.py check -mrs
+      poetry run flake8
+      poetry run mypy offlinemsmtp
+      poetry run black --check .
 
   - build: |
       cd offlinemsmtp
-      python setup.py sdist
+      poetry run python setup.py sdist
+
+  - readme: |
+      set +x
+      poetry run rst2html5 README.rst | curl -H "Content-Type: text/html"   \
+           -H "Authorization: Bearer $(cat ~/.readme-token)"                \
+           -XPUT                                                            \
+           --data-binary @-                                                 \
+           'https://git.sr.ht/api/repos/offlinemsmtp/readme' &&
+      echo "README set"
