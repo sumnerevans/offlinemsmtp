@@ -17,7 +17,7 @@ with open(os.path.join(here, "offlinemsmtp/__init__.py"), encoding="utf-8") as f
 setup(
     name="offlinemsmtp",
     version=version,
-    url="https://gitlab.com/sumner/offlinemsmtp",
+    url="https://sr.ht/~sumner/offlinemsmtp/",
     description="msmtp wrapper allowing for offline use",
     long_description=long_description,
     author="Sumner Evans",

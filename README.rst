@@ -1,4 +1,4 @@
-.. image:: https://gitlab.com/sumner/offlinemsmtp/raw/master/logo/logo.png
+.. image:: https://git.sr.ht/~sumner/offlinemsmtp/blob/master/logo/logo.png
    :width: 50%
    :align: center
    :alt: offlinemsmtp
@@ -15,7 +15,7 @@ connection.
 .. image:: https://img.shields.io/aur/version/offlinemsmtp?logo=linux&logoColor=fff
    :alt: AUR Version
    :target: https://aur.archlinux.org/packages/offlinemsmtp/
-.. image:: http://img.shields.io/liberapay/receives/sumner.svg?logo=liberapay
+.. image:: https://img.shields.io/liberapay/receives/sumner.svg?logo=liberapay
    :alt: LiberaPay Donation Status
    :target: https://liberapay.com/sumner/donate
 
