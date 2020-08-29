@@ -1,0 +1,17 @@
+image: archlinux
+packages:
+  - python-poetry
+sources:
+  - https://git.sr.ht/~sumner/offlinemsmtp
+tasks:
+  - lint: |
+      cd offlinemsmtp
+      poetry install
+      python setup.py check -mrs
+      flake8
+      mypy offlinemsmtp
+      black --check .
+
+  - build: |
+      cd offlinemsmtp
+      python setup.py sdist
