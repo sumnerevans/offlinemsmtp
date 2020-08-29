@@ -22,7 +22,7 @@ def main():
         ),
     )
     parser.add_argument(
-        "-d", "--daemon", action="store_true", help="run the offlinemsmtp daemon.",
+        "-d", "--daemon", action="store_true", help="run the offlinemsmtp daemon."
     )
     parser.add_argument(
         "-s",
@@ -47,13 +47,11 @@ def main():
         help="the msmtp configuration file to use",
     )
     parser.add_argument(
-        "--send-mail-file", default=None, help="only send mail if this file exists",
+        "--send-mail-file", default=None, help="only send mail if this file exists"
     )
+    parser.add_argument("-l", "--logfile", help="the filename to send logs to")
     parser.add_argument(
-        "-l", "--logfile", help="the filename to send logs to",
-    )
-    parser.add_argument(
-        "-m", "--loglevel", help="the minium level of logging to do", default="WARNING",
+        "-m", "--loglevel", help="the minium level of logging to do", default="WARNING"
     )
 
     if "--" in sys.argv:

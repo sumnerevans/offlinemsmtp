@@ -1,5 +1,6 @@
 image: archlinux
 packages:
+  - git
   - python-poetry
 sources:
   - https://git.sr.ht/~sumner/offlinemsmtp
@@ -20,6 +21,7 @@ tasks:
 
   - readme: |
       set +x
+      git branch --contains | grep master &&
       poetry run rst2html5 README.rst | curl -H "Content-Type: text/html"   \
            -H "Authorization: Bearer $(cat ~/.readme-token)"                \
            -XPUT                                                            \
