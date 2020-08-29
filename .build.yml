@@ -21,6 +21,7 @@ tasks:
 
   - readme: |
       set +x
+      cd offlinemsmtp
       git branch --contains | grep master &&
       poetry run rst2html5 README.rst | curl -H "Content-Type: text/html"   \
            -H "Authorization: Bearer $(cat ~/.readme-token)"                \

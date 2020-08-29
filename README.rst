@@ -6,6 +6,19 @@
 Allows you to use ``msmtp`` offline by queuing email until you have an internet
 connection.
 
+.. image:: https://builds.sr.ht/~sumner/offlinemsmtp.svg
+   :alt: Build Status
+   :target: https://builds.sr.ht/~sumner?search=%7Esumner%2Fofflinemsmtp
+.. image:: https://img.shields.io/pypi/v/offlinemsmtp?color=4DC71F&logo=python&logoColor=fff
+   :alt: PyPi Version
+   :target: https://pypi.org/project/offlinemsmtp/
+.. image:: https://img.shields.io/aur/version/offlinemsmtp?logo=linux&logoColor=fff
+   :alt: AUR Version
+   :target: https://aur.archlinux.org/packages/offlinemsmtp/
+.. image:: http://img.shields.io/liberapay/receives/sumner.svg?logo=liberapay
+   :alt: LiberaPay Donation Status
+   :target: https://liberapay.com/sumner/donate
+
 Features
 --------
 
