@@ -43,9 +43,11 @@ tasks:
   - build: |
       poetry run python setup.py sdist
 
-#   - deploy: |
-#       poetry run twine upload -r testpypi dist/* &&
-#       poetry run twine upload dist/*
+  - deploy: |
+      ./cicd/is_tagged_with_version &&
+        poetry run twine upload -r testpypi dist/* &&
+        poetry run twine upload dist/*
 
-#   - verify: |
-#       pip install offlinemsmtp
+  - verify: |
+      ./cicd/is_tagged_with_version &&
+        pip install offlinemsmtp

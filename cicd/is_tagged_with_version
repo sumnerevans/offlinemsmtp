@@ -1,0 +1,23 @@
+#! /usr/bin/env python
+
+import re
+import subprocess
+import sys
+
+version_tag_re = re.compile(r"v\d+\.\d+\.\d+")
+
+
+tags = (
+    subprocess.run(["git", "tag", "--contains", "HEAD"], capture_output=True)
+    .stdout.decode()
+    .strip()
+    .split()
+)
+
+for tag in tags:
+    if match := version_tag_re.match(tag):
+        print(f"VERSION TAG {tag} FOUND")
+
+
+# By default, exit with a failure so that we don't try and deploy on accident.
+sys.exit(1)
