@@ -14,10 +14,14 @@ tags = (
     .split()
 )
 
+# If one of the tags is a version tag, then run the commands specified in the
+# parameters.
 for tag in tags:
     if match := version_tag_re.match(tag):
         print(f"VERSION TAG {tag} FOUND")
 
-
-# By default, exit with a failure so that we don't try and deploy on accident.
-sys.exit(1)
+        # Execute the associated commands, raising an exception if the command
+        # returns a non-zero value.
+        for arg in sys.argv[1:]:
+            print(f"+ {' '.join(arg.split())}")
+            subprocess.run(arg.split()).check_returncode()
