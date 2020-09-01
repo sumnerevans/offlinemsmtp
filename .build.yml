@@ -26,12 +26,12 @@ tasks:
   - readme: |
       set +x
       git branch --contains | grep master &&
-        poetry run rst2html5 README.rst |                           \
+        poetry run rst2html5 --no-doc-title README.rst |            \
           curl -H "Content-Type: text/html"                         \
             -H "Authorization: Bearer $(cat ~/.readme-token)"       \
             -XPUT                                                   \
             --data-binary @-                                        \
-            "https://git.sr.ht/api/repos/${REPO_NAME}/readme" &&
+            "https://git.sr.ht/api/repos/${PROJECT_NAME}/readme" &&
         echo "README set" || echo "Skipping README set because not on master"
 
   - lint: |
