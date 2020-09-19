@@ -28,10 +28,10 @@ tasks:
       poetry run python setup.py sdist
 
   - deploy: |
-      ./cicd/run_if_tagged_with_version                             \
-        "poetry run twine upload -r testpypi dist/*"                \
+      ./.builds/src/run_if_tagged_with_version                            \
+        "poetry run twine upload -r testpypi dist/*"                      \
         "poetry run twine upload dist/*"
 
   - verify: |
-      ./cicd/run_if_tagged_with_version                             \
+      ./.builds/src/run_if_tagged_with_version                            \
         "pip install ${REPO_NAME}"
