@@ -17,6 +17,7 @@ tasks:
       cd ${REPO_NAME}
       poetry install
       echo "cd ${REPO_NAME}" >> ~/.buildenv
+      echo "source $(poetry env info -p)/bin/activate" >> ~/.buildenv
 
   - lint: |
       poetry run python setup.py check -mrs
