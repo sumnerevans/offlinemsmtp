@@ -50,4 +50,4 @@ tasks:
 
   - verify: |
       ./cicd/run_if_tagged_with_version                             \
-        "pip install offlinemsmtp"
+        "pip install ${REPO_NAME}"

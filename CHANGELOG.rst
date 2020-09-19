@@ -1,7 +1,7 @@
 Version 0.3.6
 =============
 
-j Added the ability to to delimit arguments that should always be sent to
+* Added the ability to to delimit arguments that should always be sent to
   ``msmtp`` using ``--``.
 * Added better README documentation.
 * The AUR package now automatically installs the ``.service`` file to
