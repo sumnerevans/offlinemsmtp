@@ -1,12 +1,9 @@
 image: archlinux
 packages:
-  - git
   - python-poetry
 sources:
   - https://git.sr.ht/~sumner/offlinemsmtp
 secrets:
-  # README Personal Access Token
-  - 2fb5fd72-fa96-46c6-ab90-6b7cabebba16
   # PyPi Credentials
   - a935a60f-b0ae-4232-b17e-e6b921ab0b91
 environment:
@@ -20,19 +17,6 @@ tasks:
       cd ${REPO_NAME}
       poetry install
       echo "cd ${REPO_NAME}" >> ~/.buildenv
-
-  # If we are on the master branch, compile the README.rst to HTML and set it
-  # as the README for the repo.
-  - readme: |
-      set +x
-      git branch --contains | grep master &&
-        poetry run rst2html5 --no-doc-title README.rst |            \
-          curl -H "Content-Type: text/html"                         \
-            -H "Authorization: Bearer $(cat ~/.readme-token)"       \
-            -XPUT                                                   \
-            --data-binary @-                                        \
-            "https://git.sr.ht/api/repos/${PROJECT_NAME}/readme" &&
-        echo "README set" || echo "Skipping README set because not on master"
 
   - lint: |
       poetry run python setup.py check -mrs
