@@ -117,6 +117,14 @@ offlinemsmtp accepts a number of command line arguments:
   allows you to pass arguments that may conflict with ``offlinemsmtp`` arguments
   to ``msmtp``.
 
+Contributing
+------------
+
+See the CONTRIBUTING.md_ document for details on how to contribute to the
+project.
+
+.. _CONTRIBUTING.md: https://git.sr.ht/~sumner/offlinemsmtp/tree/master/CONTRIBUTING.md
+
 Other projects
 --------------
 

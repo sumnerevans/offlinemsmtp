@@ -20,18 +20,18 @@ tasks:
       echo "source $(poetry env info -p)/bin/activate" >> ~/.buildenv
 
   - lint: |
-      poetry run python setup.py check -mrs
-      poetry run flake8
-      poetry run mypy offlinemsmtp
-      poetry run black --check .
+      python setup.py check -mrs
+      flake8
+      mypy offlinemsmtp
+      black --check .
 
   - build: |
       poetry run python setup.py sdist
 
   - deploy: |
       ./.builds/src/run_if_tagged_with_version                            \
-        "poetry run twine upload -r testpypi dist/*"                      \
-        "poetry run twine upload dist/*"
+        "twine upload -r testpypi dist/*"                      \
+        "twine upload dist/*"
 
   - verify: |
       ./.builds/src/run_if_tagged_with_version                            \
