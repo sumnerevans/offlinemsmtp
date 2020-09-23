@@ -35,7 +35,8 @@ You can also send logs to a file using the `-l` flag.
 
 If you want to propose a code change, please submit a patch to the
 [~sumner/offlinemsmtp-devel](https://lists.sr.ht/~sumner/offlinemsmtp-devel)
-mailing list. If it is good, I will merge it in.
+mailing list. If it is good, I will merge it in. For help sending patches to
+this list, please consult [git-send-email.io](https://git-send-email.io).
 
 ### Installing Development Dependencies
 
