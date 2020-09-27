@@ -1,3 +1,16 @@
+# Version 0.3.7
+
+* Fixed dependency issue where sphinx was required as an `install_dependency`
+  rather than a dev dependency.
+
+* INFRASTRUCTURE
+
+  * Migrated to sr.ht because of usability regressions in GitLab.
+  * Migrated from Pipenv to Poetry because Poetry is actually fast.
+  * Added `CONTRIBUTING.md` document to help onboard contributors.
+  * Added a `.editorconfig` file to help create consistent development
+    environments for contributors.
+
 # Version 0.3.6
 
 * Added the ability to to delimit arguments that should always be sent to
