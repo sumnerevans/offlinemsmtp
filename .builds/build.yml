@@ -32,7 +32,3 @@ tasks:
       ./.builds/src/run_if_tagged_with_version                            \
         "twine upload -r testpypi dist/*"                                 \
         "twine upload dist/*"
-
-  - verify: |
-      ./.builds/src/run_if_tagged_with_version                            \
-        "pip install ${REPO_NAME}"
