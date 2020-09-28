@@ -105,7 +105,7 @@ class Daemon(FileSystemEventHandler):
     subject_re = re.compile("Subject: (.*)")
 
     def get_msmtp_command(self, msmtp_args, pretend=False):
-        args = ["/usr/bin/msmtp"]
+        args = ["/usr/bin/env", "msmtp"]
         if pretend:
             args.append("-P")
         args += ["-C", str(self.config_file), *msmtp_args.split()]
