@@ -1,3 +1,7 @@
+# Version 0.3.8
+
+* Use `/usr/bin/env` to find `msmtp` executable for compatibility with NixOS.
+
 # Version 0.3.7
 
 * Fixed dependency issue where sphinx was required as an `install_dependency`
