@@ -1,6 +1,8 @@
 image: archlinux
 packages:
   - python-poetry
+  - cairo
+  - gobject-introspection
 sources:
   - https://git.sr.ht/~sumner/offlinemsmtp
 secrets:
