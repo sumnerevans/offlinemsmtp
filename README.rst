@@ -6,9 +6,9 @@
 Allows you to use ``msmtp`` offline by queuing email until you have an internet
 connection.
 
-.. image:: https://builds.sr.ht/~sumner/offlinemsmtp.svg
+.. image:: https://builds.sr.ht/~sumner.svg?search=~sumner/offlinemsmtp tags:build.yml
    :alt: Build Status
-   :target: https://builds.sr.ht/~sumner?search=%7Esumner%2Fofflinemsmtp
+   :target: https://builds.sr.ht/~sumner?search=%7Esumner%2Fofflinemsmtp+tags%3Abuild.yml
 .. image:: https://img.shields.io/pypi/v/offlinemsmtp?color=4DC71F&logo=python&logoColor=fff
    :alt: PyPi Version
    :target: https://pypi.org/project/offlinemsmtp/

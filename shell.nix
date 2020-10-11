@@ -1,18 +1,41 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs ? import <nixpkgs> {} }: with pkgs; let
+  py = python38.override {
+    packageOverrides = self: super: {
+      pycairo = super.pycairo.overridePythonAttrs (oldAttrs: rec {
+        version = "1.20.0";
+        src = oldAttrs.src.override {
+          inherit version;
+          sha256 = "5695a10cb7f9ae0d01f665b56602a845b0a8cb17e2123bfece10c2e58552468c";
+        };
+      });
+    };
+  };
+in
 pkgs.mkShell {
-  nativeBuildInputs = with pkgs; [
+  nativeBuildInputs = [
     gobject-introspection
     python3Packages.setuptools
+    wrapGAppsHook
   ];
 
-  propagatedBuildInputs = with pkgs; [
-    pkg-config
-    python38
-    cairo
-    poetry
-  ];
-
-  buildInputs = with pkgs; [
+  buildInputs = [
     libnotify
   ];
+
+  propagatedBuildInputs = with python3Packages; [
+    cairo
+    msmtp
+    pass
+    pkg-config
+    poetry
+    (python38.withPackages (ps: with ps; [
+      pygobject3
+      pycairo
+      watchdog
+    ]))
+  ];
+
+  # hook for gobject-introspection doesn't like strictDeps
+  # https://github.com/NixOS/nixpkgs/issues/56943
+  strictDeps = false;
 }

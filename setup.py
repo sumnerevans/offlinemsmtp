@@ -21,7 +21,7 @@ setup(
     description="msmtp wrapper allowing for offline use",
     long_description=long_description,
     author="Sumner Evans",
-    author_email="sumner.evans98@gmail.com",
+    author_email="inquiries@sumnerevans.com",
     license="GPL3",
     classifiers=[
         #   3 - Alpha
