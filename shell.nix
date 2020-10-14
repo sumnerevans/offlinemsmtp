@@ -32,8 +32,13 @@ pkgs.mkShell {
       pygobject3
       pycairo
       watchdog
+      pkgconfig
     ]))
   ];
+
+  shellHook = ''
+    export SOURCE_DATE_EPOCH=315532800
+  '';
 
   # hook for gobject-introspection doesn't like strictDeps
   # https://github.com/NixOS/nixpkgs/issues/56943
