@@ -124,7 +124,7 @@ class Daemon(FileSystemEventHandler):
         )
 
         for line in test_run.stdout.decode("utf-8").split("\n"):
-            # TODO convert this stuff to Walrus operators once that's more
+            # TODO (#3): convert this stuff to Walrus operators once that's more
             # supported by tools.
             host_match = self.host_re.match(line)
             if host_match:

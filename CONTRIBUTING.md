@@ -95,7 +95,8 @@ the build before knowing if your code is the correct style.
 The CI process uses all three tools to analyse the Python code. You can run the
 same checks that the lint job runs yourself with the following commands:
 
-    $ python setup.py check -mrs
+    $ poetry check
     $ flake8
     $ mypy offlinemsmtp
     $ black --check .
+    $ .builds/bin/custom_style_check.py
