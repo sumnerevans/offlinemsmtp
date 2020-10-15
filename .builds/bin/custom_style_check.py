@@ -62,7 +62,7 @@ with open(Path("offlinemsmtp/__init__.py")) as f:
             version = eval(line.split()[-1])
             break
     else:  # nobreak
-        assert False, "No version in offlinemsmtp/__init__.py"
+        raise AssertionError("No version in offlinemsmtp/__init__.py")
 
 with open(Path("pyproject.toml")) as f:
     for line in f:
@@ -70,7 +70,7 @@ with open(Path("pyproject.toml")) as f:
             assert eval(line.split()[-1]) == version, "Version mismatch: pyproject.toml"
             break
     else:  # nobreak
-        assert False, "No version in pyproject.toml"
+        raise AssertionError("No version in pyproject.toml")
 
 with open(Path("CHANGELOG.md")) as f:
     assert f.readline().strip() == f"# Version {version}", "Version mismatch: CHANGELOG"
