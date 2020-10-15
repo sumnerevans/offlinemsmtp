@@ -25,11 +25,4 @@ tasks:
   # as the README for the repo.
   - readme: |
       set +x
-      git branch --contains | grep master &&
-        rst2html5 --template="{body}" README.rst |                          \
-          curl -H "Content-Type: text/html"                                 \
-            -H "Authorization: Bearer $(cat ~/.readme-token)"               \
-            -XPUT                                                           \
-            --data-binary @-                                                \
-            "https://git.sr.ht/api/repos/${REPO_NAME}/readme" &&
-        echo "README set" || echo "Skipping README set because not on master"
+      ./bin/deploy_readme

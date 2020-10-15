@@ -32,6 +32,6 @@ tasks:
       poetry build
 
   - deploy: |
-      ./.builds/bin/run_if_tagged_with_version                            \
+      .builds/bin/run_if_tagged_with_version                              \
         "twine upload -r testpypi dist/*"                                 \
         "twine upload dist/*"
