@@ -1,3 +1,7 @@
+# Version 0.3.9
+
+* Use `/usr/bin/env` to find `msmtp` executable for compatibility with NixOS.
+
 # Version 0.3.8
 
 * Use `/usr/bin/env` to find `msmtp` executable for compatibility with NixOS.
