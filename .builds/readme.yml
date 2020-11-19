@@ -16,7 +16,8 @@ triggers:
     condition: failure
     to: ~sumner/offlinemsmtp-devel@lists.sr.ht
 tasks:
-  - skip: |
+  # Skip everything if not on master.
+  - skip_not_master: |
       cd $REPO_NAME
       git branch --contains | grep master || echo "Skipping README deploy since not on master"
       git branch --contains | grep master || complete-build
