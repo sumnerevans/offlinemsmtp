@@ -27,14 +27,12 @@ tasks:
       echo "cd ${REPO_NAME}" >> ~/.buildenv
       echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.buildenv
 
-  # If we are on the master branch, compile the README.rst to HTML and set it
-  # as the README for the repo.
   - readme: |
       set +x
       set -e
-      rst2html5 README.rst | \
-        curl -H "Content-Type: text/html" \
-             -H "Authorization: Bearer $(cat ~/.readme-token)" \
-             -XPUT \
-             --data-binary @- \
+      rst2html5 --template="{body}" README.rst |                            \
+        curl -H "Content-Type: text/html"                                   \
+             -H "Authorization: Bearer $(cat ~/.readme-token)"              \
+             -XPUT                                                          \
+             --data-binary @-                                               \
              "https://git.sr.ht/api/repos/${REPO_NAME}/readme"

@@ -32,7 +32,7 @@ tasks:
       poetry build
 
   - deploy: |
-      # Don't deploy if not tagged with a version tag
+      .builds/bin/tagged_with_version || echo "Skipping deploy since not tagged with version"
       .builds/bin/tagged_with_version || complete-build
       twine upload -r testpypi dist/*
       twine upload dist/*
