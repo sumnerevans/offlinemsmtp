@@ -16,6 +16,11 @@ triggers:
     condition: failure
     to: ~sumner/offlinemsmtp-devel@lists.sr.ht
 tasks:
+  - skip: |
+      cd $REPO_NAME
+      git branch --contains | grep master || echo "Skipping README deploy since not on master"
+      git branch --contains | grep master || complete-build
+
   - setup: |
       pip3 install rst2html5
       echo "cd ${REPO_NAME}" >> ~/.buildenv
@@ -25,4 +30,10 @@ tasks:
   # as the README for the repo.
   - readme: |
       set +x
-      ./bin/deploy_readme
+      set -e
+      rst2html5 README.rst | \
+        curl -H "Content-Type: text/html" \
+             -H "Authorization: Bearer $(cat ~/.readme-token)" \
+             -XPUT \
+             --data-binary @- \
+             "https://git.sr.ht/api/repos/${REPO_NAME}/readme"
