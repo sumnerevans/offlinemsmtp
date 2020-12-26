@@ -1,8 +1,8 @@
-image: archlinux
+image: nixos/unstable
 packages:
-  - python-poetry
-  - cairo
-  - gobject-introspection
+  - nixos.python38Packages.poetry
+  - nixos.cairo
+  - nixos.gobject-introspection
 sources:
   - https://git.sr.ht/~sumner/offlinemsmtp
 secrets:
@@ -10,10 +10,10 @@ secrets:
   - 812d576d-403c-4093-944e-ff3a8d07cfc0
 environment:
   REPO_NAME: offlinemsmtp
-triggers:
-  - action: email
-    condition: failure
-    to: ~sumner/offlinemsmtp-devel@lists.sr.ht
+# triggers:
+#   - action: email
+#     condition: failure
+#     to: ~sumner/offlinemsmtp-devel@lists.sr.ht
 tasks:
   - setup: |
       cd ${REPO_NAME}
