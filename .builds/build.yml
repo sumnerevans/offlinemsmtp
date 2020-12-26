@@ -6,8 +6,8 @@ packages:
 sources:
   - https://git.sr.ht/~sumner/offlinemsmtp
 secrets:
-  # PyPi Credentials
-  - a935a60f-b0ae-4232-b17e-e6b921ab0b91
+  # PyPi Deploy Credentials for Offlinemsmtp
+  - 812d576d-403c-4093-944e-ff3a8d07cfc0
 environment:
   REPO_NAME: offlinemsmtp
 triggers:
@@ -31,8 +31,10 @@ tasks:
   - build: |
       poetry build
 
+  - test-deploy: |
+      poetry publish --dry-run
+
   - deploy: |
       .builds/bin/tagged_with_version || echo "Skipping deploy since not tagged with version"
       .builds/bin/tagged_with_version || complete-build
-      twine upload -r testpypi dist/*
-      twine upload dist/*
+      poetry publish
