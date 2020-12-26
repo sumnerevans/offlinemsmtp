@@ -1,18 +1,4 @@
-{ pkgs ? import <nixpkgs> {} }: with pkgs; let
-  py = python38.override {
-    packageOverrides = self: super: {
-      pycairo = super.pycairo.overridePythonAttrs (
-        oldAttrs: rec {
-          version = "1.20.0";
-          src = oldAttrs.src.override {
-            inherit version;
-            sha256 = "5695a10cb7f9ae0d01f665b56602a845b0a8cb17e2123bfece10c2e58552468c";
-          };
-        }
-      );
-    };
-  };
-in
+{ pkgs ? import <nixpkgs> {} }: with pkgs;
 pkgs.mkShell {
   nativeBuildInputs = [
     gobject-introspection
@@ -25,7 +11,7 @@ pkgs.mkShell {
     rnix-lsp
   ];
 
-  propagatedBuildInputs = with python3Packages; [
+  propagatedBuildInputs = with python38Packages; [
     cairo
     msmtp
     pass
@@ -43,8 +29,11 @@ pkgs.mkShell {
     )
   ];
 
+  POETRY_VIRTUALENVS_IN_PROJECT = 1;
+
   shellHook = ''
     export SOURCE_DATE_EPOCH=315532800
+    export NIX_SHELL_LAST_UPDATED=$(date +%s)
   '';
 
   # hook for gobject-introspection doesn't like strictDeps

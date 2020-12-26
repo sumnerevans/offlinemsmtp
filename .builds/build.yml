@@ -17,24 +17,24 @@ environment:
 tasks:
   - setup: |
       cd ${REPO_NAME}
-      poetry install
+      nix-shell --command "poetry install"
       echo "cd ${REPO_NAME}" >> ~/.buildenv
-      echo "source $(poetry env info -p)/bin/activate" >> ~/.buildenv
 
   - lint: |
-      poetry check
-      flake8
-      mypy offlinemsmtp
-      black --check .
-      .builds/bin/custom_style_check.py
+      nix-shell --command "source $(poetry env info -p)/bin/activate &&
+        poetry check &&
+        flake8 &&
+        mypy offlinemsmtp &&
+        black --check . &&
+        .builds/bin/custom_style_check.py"
 
   - build: |
-      poetry build
+      nix-shell --command "poetry build"
 
   - test-deploy: |
-      poetry publish --dry-run
+      nix-shell --command "poetry publish --dry-run"
 
   - deploy: |
       .builds/bin/tagged_with_version || echo "Skipping deploy since not tagged with version"
       .builds/bin/tagged_with_version || complete-build
-      poetry publish
+      nix-shell --command "poetry publish"
