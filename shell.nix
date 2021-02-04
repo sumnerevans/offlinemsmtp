@@ -32,8 +32,14 @@ pkgs.mkShell {
   POETRY_VIRTUALENVS_IN_PROJECT = 1;
 
   shellHook = ''
+    set -x
     export SOURCE_DATE_EPOCH=315532800
     export NIX_SHELL_LAST_UPDATED=$(date +%s)
+
+    # An update happened to the shell.nix, so remove and reinstall everything in the virtualenv
+    rm -rf .venv
+    poetry install
+    set +x
   '';
 
   # hook for gobject-introspection doesn't like strictDeps

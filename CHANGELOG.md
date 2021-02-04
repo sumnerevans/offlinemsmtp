@@ -2,10 +2,14 @@
 
 * INFRASTRUCTURE
 
-  * Added a custom style check for TODOs and ensuring that all instances of the
-    version are correct.
-  * Use a nix shell for a more consistent development environment.
   * Got rid of `setup.py` and replaced with `pyproject.toml`.
+  * Convert from Twine to Poetry for publishing to PyPi.
+  * Use a nix shell for a more consistent development environment.
+  * Added a custom style check for TODOs and ensuring that all instances of the
+    version are correct. It also checks to make sure that the version number
+    throughout the codebase match up.
+  * Improvements to the build pipeline
+  * Use PyPi credentials that are scoped to only the offlinemsmtp project
 
 # Version 0.3.8
 
