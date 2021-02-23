@@ -13,7 +13,7 @@ environment:
 triggers:
   - action: email
     condition: failure
-    to: ~sumner/offlinemsmtp-devel@lists.sr.ht
+    to: Sumner Evans <alerts@sumnerevans.com>
 tasks:
   - setup: |
       cd ${REPO_NAME}
