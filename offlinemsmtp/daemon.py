@@ -123,6 +123,7 @@ class Daemon(FileSystemEventHandler):
             stderr=PIPE,
         )
 
+        host, port = None, None
         for line in test_run.stdout.decode("utf-8").split("\n"):
             # TODO (#3): convert this stuff to Walrus operators once that's more
             # supported by tools.
