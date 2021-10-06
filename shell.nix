@@ -32,7 +32,7 @@ pkgs.mkShell {
     pkg-config
     poetry
     (
-      python38.withPackages (
+      python3.withPackages (
         ps: with ps; [
           pygobject3
           pycairo

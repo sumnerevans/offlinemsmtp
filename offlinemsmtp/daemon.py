@@ -42,6 +42,7 @@ class Daemon(FileSystemEventHandler):
         logging.info(f"New message detected: {event.src_path}")
 
         self.queue.put(Path(event.src_path))
+        time.sleep(1)  # wait for the file to be fully written to disk
         self.flush_queue()
 
     def flush_queue(self):
