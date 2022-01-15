@@ -1,10 +1,16 @@
 # Version 0.3.9
 
+* Wait for one second after the path gets created on disk to allow the file to
+  be fully written.
+* Fixed `PyGObject` dependency
+
 * INFRASTRUCTURE
 
+  * Migrated to GitHub and GitHub Actions
   * Added a custom style check for TODOs and ensuring that all instances of the
     version are correct.
-  * Use a nix shell for a more consistent development environment.
+  * Add a `shell.nix` for a more consistent development environment, and use it
+    with direnv.
   * Got rid of `setup.py` and replaced with `pyproject.toml`.
 
 # Version 0.3.8
