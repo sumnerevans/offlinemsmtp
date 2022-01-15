@@ -2,7 +2,11 @@ name: Lint and Build
 
 on:
   pull_request:
+    branches: [ master ]
   push:
+  release:
+    types:
+      - created
 
 jobs:
   lint:
