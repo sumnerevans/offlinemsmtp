@@ -1,7 +1,4 @@
-<div style="margin: 0 auto; width: 50%">
-    <img src="https://git.sr.ht/~sumner/offlinemsmtp/blob/master/logo/logo.png"
-         alt="offlinemsmtp">
-</div>
+![offlinemsmtp](./logo/logo.png)
 
 Allows you to use `msmtp` offline by queuing email until you have an internet
 connection.
