@@ -101,9 +101,8 @@ offlinemsmtp accepts a number of command line arguments:
 
 ## Contributing
 
-See the
-[CONTRIBUTING.md](https://git.sr.ht/~sumner/offlinemsmtp/tree/master/item/CONTRIBUTING.md)
-document for details on how to contribute to the project.
+See the [CONTRIBUTING.md](./CONTRIBUTING.md) document for details on how to
+contribute to the project.
 
 ## Other projects
 
