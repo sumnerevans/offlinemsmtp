@@ -30,7 +30,7 @@ jobs:
       - name: black --check .
         run: nix-shell --command "poetry run black --check ."
       - name: custom style check
-        run: nix-shell --command "poetry run ./.builds/bin/custom_style_check.py"
+        run: nix-shell --command "poetry run ./cicd/custom_style_check.py"
 
   build:
     runs-on: ubuntu-latest
