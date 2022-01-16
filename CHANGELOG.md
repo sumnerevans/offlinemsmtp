@@ -1,3 +1,7 @@
+# Version 0.3.10
+
+* Require latest `PyGObject` and `watchdog` dependencies.
+
 # Version 0.3.9
 
 * Wait for one second after the path gets created on disk to allow the file to
