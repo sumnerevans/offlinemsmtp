@@ -27,7 +27,7 @@ offlinemsmtp = "offlinemsmtp.__main__:main"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-PyGObject = "^3.38.0"
+PyGObject = "^3.42.0"
 watchdog = "^2.1.6"
 
 [tool.poetry.dev-dependencies]
