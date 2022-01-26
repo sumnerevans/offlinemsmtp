@@ -5,7 +5,7 @@ description = "msmtp wrapper allowing for offline use"
 authors = ["Sumner Evans <inquiries@sumnerevans.com>"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
-repository = "https://sr.ht/~sumner/offlinemsmtp"
+repository = "https://github.com/sumnerevans/offlinemsmtp"
 keywords = ["email", "msmtp", "offline"]
 classifiers = [
     #   3 - Alpha
@@ -23,7 +23,7 @@ classifiers = [
 offlinemsmtp = "offlinemsmtp.__main__:main"
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://todo.sr.ht/~sumner/offlinemsmtp"
+"Bug Tracker" = "https://github.com/sumnerevans/offlinemsmtp/issues"
 
 [tool.poetry.dependencies]
 python = "^3.8"

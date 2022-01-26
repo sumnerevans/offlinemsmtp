@@ -1,14 +1,10 @@
 # Contributing
 
-Contributions are welcome! Please start discussions and send patches to the
-[~sumner/public-inbox][public-inbox] mailing list. Confirmed bugs and approved
-feature requests can be added to the [offlinemsmtp ticket tracker][tracker].
+Contributions are welcome! Please open issues on the repository, or submit a PR.
 
 ## Issue Reporting
 
-Please report any bugs and suggest features by sending an email to the
-[~sumner/public-inbox][public-inbox] mailing list. Confirmed bugs and approved
-feature requests can be added to the [offlinemsmtp ticket racker][tracker].
+Please report any bugs and suggest features by creating an issue.
 
 *Please note that as of right now, I (Sumner) am basically the only contributor
 to this project, so my response time to your issue may be anywhere from instant
@@ -27,10 +23,8 @@ You can also send logs to a file using the `-l` flag.
 
 ## Code
 
-If you want to propose a code change, please submit a patch to the
-[~sumner/public-inbox][public-inbox] mailing list. If it is good, I will merge
-it in. For help sending patches to this list, please consult
-[git-send-email.io](https://git-send-email.io).
+If you want to propose a code change, please submit a PR. If it is good, I will
+merge it in.
 
 ### Installing Development Dependencies
 
@@ -94,6 +88,3 @@ same checks that the lint job runs yourself with the following commands:
     $ mypy offlinemsmtp
     $ black --check .
     $ .builds/bin/custom_style_check.py
-
-[public-inbox]: https://lists.sr.ht/~sumner/public-inbox
-[tracker]: https://todo.sr.ht/~sumner/offlinemsmtp
