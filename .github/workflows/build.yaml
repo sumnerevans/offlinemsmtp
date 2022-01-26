@@ -25,6 +25,13 @@ jobs:
       - name: Install dependencies
         run: nix-shell --command "poetry install"
 
+      - name: pre-commit
+        run: |
+          nix-shell --command "poetry run pre-commit run -av trailing-whitespace"
+          nix-shell --command "poetry run pre-commit run -av end-of-file-fixer"
+          nix-shell --command "poetry run pre-commit run -av check-yaml"
+          nix-shell --command "poetry run pre-commit run -av check-added-large-files"
+
       - name: poetry check
         if: always()
         run: nix-shell --command "poetry check"
@@ -110,4 +117,3 @@ jobs:
       run: |
         poetry config pypi-token.pypi ${{ secrets.PYPI_DEPLOY_TOKEN }}
         poetry publish
-

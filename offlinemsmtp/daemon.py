@@ -10,9 +10,10 @@ import gi
 
 gi.require_version("Notify", "0.7")
 from gi.repository import Notify
-from offlinemsmtp import util
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
+
+from offlinemsmtp import util
 
 
 class Daemon(FileSystemEventHandler):
