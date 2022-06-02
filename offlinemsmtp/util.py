@@ -16,7 +16,7 @@ def notify(message, timeout=None, urgency=Notify.Urgency.LOW):
     logging.info(message)
 
     if SILENT:
-        return
+        return None
 
     # Initialize the notifications if necessary.
     if not NOTIFICATIONS_INITIALIZED:

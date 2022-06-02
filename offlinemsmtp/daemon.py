@@ -23,11 +23,9 @@ class Daemon(FileSystemEventHandler):
         """Initialize the daemon."""
         self.connected = False
         self.silent = args.silent
-        self.config_file = Path(args.file).resolve() if args.file else None
-        self.send_mail_file = (
-            Path(args.send_mail_file).resolve() if args.send_mail_file else None
-        )
-        self.root_dir = Path(args.dir).resolve() if args.dir else None
+        self.config_file = Path(args.file).resolve()
+        self.send_mail_file = Path(args.send_mail_file).resolve() if args.send_mail_file else None
+        self.root_dir = Path(args.dir).resolve()
 
         # Initialize the queue
         self.queue = Queue()
@@ -69,30 +67,24 @@ class Daemon(FileSystemEventHandler):
                 continue
 
             # Create a sending notification that lives "forever". It will be
-            # closed when the sender process completes.
-            sending_notification = util.notify(
-                f"Sending {message_path}...", timeout=600000
-            )
+            # closed when the msmtp process completes.
+            sending_notification = util.notify(f"Sending {message_path}...", timeout=600000)
 
             # Send the message.
-            sender = run(
-                self.get_msmtp_command(msmtp_args),
-                input=message_content,
-                stdout=PIPE,
-                stderr=PIPE,
-            )
-            sending_notification.close()
+            logging.debug(self.get_msmtp_command(msmtp_args))
+            send_cmd = run(self.get_msmtp_command(msmtp_args), input=message_content)
+            if sending_notification:
+                sending_notification.close()
 
             # Determine whether or not the send was successful or not.
-            if sender.returncode == 0:
+            if send_cmd.returncode == 0:
                 util.notify("Message sent successfully. Removing from queue.")
                 message_path.unlink()
             else:
                 util.notify(
                     f"Message did not send. Putting message back into the "
                     f"queue to try later.\n"
-                    f"Return Code: {sender.returncode}\n"
-                    f"Error: {sender.stderr.decode()}",
+                    f"Return Code: {send_cmd.returncode}\n",
                     timeout=30000,  # 30 seconds
                     urgency=Notify.Urgency.CRITICAL,
                 )
@@ -107,7 +99,7 @@ class Daemon(FileSystemEventHandler):
     subject_re = re.compile("Subject: (.*)")
 
     def get_msmtp_command(self, msmtp_args, pretend=False):
-        args = ["/usr/bin/env", "msmtp"]
+        args = ["/usr/bin/env", "msmtp", "--debug"]
         if pretend:
             args.append("-P")
         args += ["-C", str(self.config_file), *msmtp_args.split()]
@@ -127,19 +119,16 @@ class Daemon(FileSystemEventHandler):
 
         host, port = None, None
         for line in test_run.stdout.decode("utf-8").split("\n"):
-            # TODO (#3): convert this stuff to Walrus operators once that's more
-            # supported by tools.
-            host_match = self.host_re.match(line)
-            if host_match:
+            if host_match := self.host_re.match(line):
                 host = host_match.group(1)
-                continue
-
-            port_match = self.port_re.match(line)
-            if port_match:
+            elif port_match := self.port_re.match(line):
                 port = int(port_match.group(1))
 
+            if host and port:
+                break
+
         # Try to connect to the socket.
-        sock = socket.socket()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(2)  # 2 second timeout
         try:
             socket_open = sock.connect_ex((host, port))
@@ -158,8 +147,7 @@ class Daemon(FileSystemEventHandler):
                     subject = subject_match.group(1)
 
             util.notify(
-                f"Cannot connect to {host}:{port} to send message with "
-                f'subject: "{subject}".',
+                f"Cannot connect to {host}:{port} to send message with " f'subject: "{subject}".',
                 timeout=5000,
             )
         return socket_open == 0
