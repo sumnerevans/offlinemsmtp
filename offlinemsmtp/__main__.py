@@ -16,14 +16,9 @@ def main():
         "--outbox-directory",
         dest="dir",
         default=Path.home().joinpath(".offlinemsmtp-outbox"),
-        help=(
-            "set the directory to use as the outbox. Defaults to "
-            "~/.offlinemsmtp-outbox."
-        ),
+        help=("set the directory to use as the outbox. Defaults to " "~/.offlinemsmtp-outbox."),
     )
-    parser.add_argument(
-        "-d", "--daemon", action="store_true", help="run the offlinemsmtp daemon."
-    )
+    parser.add_argument("-d", "--daemon", action="store_true", help="run the offlinemsmtp daemon.")
     parser.add_argument(
         "-s",
         "--silent",
