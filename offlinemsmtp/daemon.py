@@ -170,16 +170,15 @@ class Daemon:
         observer = inotify.adapters.Inotify()
         observer.add_watch(args.dir.resolve().as_posix())
 
-        def check_outbox(daemon, observer):
+        def watch_outbox(daemon, observer):
             """Watch the outbox directory and act upon files being added there."""
             for event in observer.event_gen(yield_nones=False):
-                if event:
-                    _, type_names, path, filename = event
-                    if "IN_CLOSE_WRITE" in type_names:
-                        daemon.on_created(Path(path) / filename)
+                _, type_names, path, filename = event
+                if "IN_CLOSE_WRITE" in type_names:
+                    daemon.on_created(Path(path) / filename)
 
         observer_thread = threading.Thread(
-            target=check_outbox, args=(daemon, observer), daemon=True
+            target=watch_outbox, args=(daemon, observer), daemon=True
         )
         observer_thread.start()
 
