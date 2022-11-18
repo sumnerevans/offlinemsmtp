@@ -1,3 +1,16 @@
+# Version 0.4.0
+
+* **Dependency change**: the `watchdog` dependency has been replaced by
+  `inotify`.
+
+* Infrastructure/DX Changes
+
+  * Added pre-commit and isort
+  * Migrated to GitHub
+  * Added dependabot to auto-update GitHub Actions versions
+  * Converted the CI to not use Nix for linting and building (it's now way
+    faster)
+
 # Version 0.3.10
 
 * Require latest `PyGObject` and `watchdog` dependencies.

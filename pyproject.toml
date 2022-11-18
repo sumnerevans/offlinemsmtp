@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "offlinemsmtp"
-version = "0.3.10"
+version = "0.4.0"
 description = "msmtp wrapper allowing for offline use"
 authors = ["Sumner Evans <inquiries@sumnerevans.com>"]
 license = "GPL-3.0-or-later"
