@@ -36,7 +36,6 @@ pkgs.mkShell {
         ps: with ps; [
           pygobject3
           pycairo
-          watchdog
           pkgconfig
         ]
       )
