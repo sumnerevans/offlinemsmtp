@@ -9,9 +9,8 @@ repos:
       - id: check-added-large-files
 
   # poetry check
-  # TODO replace with upstream once poetry has direct pre-commit support
-  - repo: https://github.com/medigateio/poetry-pre-commit
-    rev: 1.1.12-v2
+  - repo: https://github.com/python-poetry/poetry
+    rev: 1.2.1
     hooks:
       - id: poetry-check
 
@@ -32,7 +31,7 @@ repos:
         files: ^offlinemsmtp/.*$
 
   # flake8
-  - repo: https://gitlab.com/pycqa/flake8
+  - repo: https://github.com/pycqa/flake8
     rev: 4.0.1
     hooks:
       - id: flake8

@@ -1,22 +1,27 @@
+"""Daemon that watches the offlinemsmtp outbox directory for queued emails.
+
+Sends out the emails as soon as they arrive, if the system is online.
+"""
+
 import logging
 import re
 import socket
+import threading
 import time
 from pathlib import Path
 from queue import Queue
 from subprocess import PIPE, run
 
 import gi
+import inotify.adapters
 
 gi.require_version("Notify", "0.7")
 from gi.repository import Notify
-from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
 
 from offlinemsmtp import util
 
 
-class Daemon(FileSystemEventHandler):
+class Daemon:
     """Listens for changes to the outbox directory."""
 
     def __init__(self, args):
@@ -34,18 +39,21 @@ class Daemon(FileSystemEventHandler):
             self.queue.put(self.root_dir.joinpath(file))
 
     def send_enabled(self):
+        """Is the file allowing us to send out emails present?
+
+        Always returns True if such a file is not configured.
+        """
         return self.send_mail_file is None or self.send_mail_file.exists()
 
-    def on_created(self, event):
+    def on_created(self, filename: Path):
         """Handle file creation."""
-        logging.info(f"New message detected: {event.src_path}")
+        logging.info("New message detected: %s", filename)
 
-        self.queue.put(Path(event.src_path))
-        time.sleep(1)  # wait for the file to be fully written to disk
+        self.queue.put(filename)
         self.flush_queue()
 
     def flush_queue(self):
-        """Sends all emails in the queue."""
+        """Send all emails in the queue."""
         if not self.send_enabled():
             util.notify("Sending email disabled", timeout=5000)
             return
@@ -72,7 +80,7 @@ class Daemon(FileSystemEventHandler):
 
             # Send the message.
             logging.debug(self.get_msmtp_command(msmtp_args))
-            send_cmd = run(self.get_msmtp_command(msmtp_args), input=message_content)
+            send_cmd = run(self.get_msmtp_command(msmtp_args), input=message_content, check=False)
             if sending_notification:
                 sending_notification.close()
 
@@ -91,14 +99,15 @@ class Daemon(FileSystemEventHandler):
                 failed.append(message_path)
 
         # Re-enqueue the failed messages.
-        for f in failed:
-            self.queue.put(f)
+        for file in failed:
+            self.queue.put(file)
 
     host_re = re.compile("host = (.*)")
     port_re = re.compile("port = (.*)")
     subject_re = re.compile("Subject: (.*)")
 
     def get_msmtp_command(self, msmtp_args, pretend=False):
+        """Full msmtp command to run to send emails."""
         args = ["/usr/bin/env", "msmtp", "--debug"]
         if pretend:
             args.append("-P")
@@ -106,8 +115,7 @@ class Daemon(FileSystemEventHandler):
         return args
 
     def can_send_message(self, msmtp_args, message_content):
-        """
-        Tests whether or not the computer can connect to the necessary server
+        """Tests whether or not the computer can connect to the necessary server
         to send the given message.
         """
         test_run = run(
@@ -115,6 +123,7 @@ class Daemon(FileSystemEventHandler):
             input=message_content,
             stdout=PIPE,
             stderr=PIPE,
+            check=False,
         )
 
         host, port = None, None
@@ -158,9 +167,20 @@ class Daemon(FileSystemEventHandler):
         util.notify("offlinemsmtp daemon started")
         # Listen on the outbox directory for new files.
         daemon = Daemon(args)
-        observer = Observer()
-        observer.schedule(daemon, str(args.dir.resolve()), recursive=True)
-        observer.start()
+        observer = inotify.adapters.Inotify()
+        observer.add_watch(args.dir.resolve().as_posix())
+
+        def watch_outbox(daemon, observer):
+            """Watch the outbox directory and act upon files being added there."""
+            for event in observer.event_gen(yield_nones=False):
+                _, type_names, path, filename = event
+                if "IN_CLOSE_WRITE" in type_names:
+                    daemon.on_created(Path(path) / filename)
+
+        observer_thread = threading.Thread(
+            target=watch_outbox, args=(daemon, observer), daemon=True
+        )
+        observer_thread.start()
 
         try:
             # Every interval, check whether there's anything to send and see if
@@ -172,5 +192,4 @@ class Daemon(FileSystemEventHandler):
 
                 time.sleep(args.interval)
         except KeyboardInterrupt:
-            observer.stop()
-        observer.join()
+            pass
