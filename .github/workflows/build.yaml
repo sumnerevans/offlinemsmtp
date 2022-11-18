@@ -2,7 +2,7 @@ name: Lint and Build
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [master]
   push:
   release:
     types:
@@ -14,86 +14,84 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: cachix/install-nix-action@v18
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      - uses: cachix/cachix-action@v12
+          python-version: 3.9
+      - name: Run image
+        uses: abatilo/actions-poetry@v2.1.6
         with:
-          name: sumnerevans
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          poetry-version: 1.2.2
 
-      - name: Install dependencies
-        run: nix-shell --command "poetry install"
+      - run: poetry install
 
       - name: pre-commit
         run: |
-          nix-shell --command "poetry run pre-commit run -av trailing-whitespace"
-          nix-shell --command "poetry run pre-commit run -av end-of-file-fixer"
-          nix-shell --command "poetry run pre-commit run -av check-yaml"
-          nix-shell --command "poetry run pre-commit run -av check-added-large-files"
+          poetry run pre-commit run -av trailing-whitespace
+          poetry run pre-commit run -av end-of-file-fixer
+          poetry run pre-commit run -av check-yaml
+          poetry run pre-commit run -av check-added-large-files
 
-      - name: poetry check
-        if: always()
-        run: nix-shell --command "poetry check"
+      - if: always()
+        run: poetry check
 
       - name: flake8
         if: always()
-        run: nix-shell --command "poetry run flake8"
+        run: poetry run flake8
 
       - name: mypy offlinemsmtp
         if: always()
-        run: nix-shell --command "poetry run mypy offlinemsmtp"
+        run: poetry run mypy offlinemsmtp
 
       - name: black --check .
         if: always()
-        run: nix-shell --command "poetry run black --check ."
+        run: poetry run black --check .
 
       - name: custom style check
         if: always()
-        run: nix-shell --command "poetry run ./cicd/custom_style_check.py"
+        run: poetry run ./cicd/custom_style_check.py
 
   build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
-      - uses: cachix/install-nix-action@v18
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      - uses: cachix/cachix-action@v12
+          python-version: 3.9
+      - name: Run image
+        uses: abatilo/actions-poetry@v2.1.6
         with:
-          name: sumnerevans
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          poetry-version: 1.2.2
 
-      - name: Install dependencies
-        run: nix-shell --command "poetry install"
-
-      - name: poetry build
-        run: nix-shell --command "poetry build"
+      - name: Run build
+        run: |
+          poetry build
 
   test_deploy:
     name: Test Deploy to PyPi
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.9
-    - name: Run image
-      uses: abatilo/actions-poetry@v2.1.6
-      with:
-        poetry-version: 1.2.2
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Run image
+        uses: abatilo/actions-poetry@v2.1.6
+        with:
+          poetry-version: 1.2.2
 
-    - name: Run build
-      run: |
-        poetry build
+      - name: Run build
+        run: |
+          poetry build
 
-    - name: Dry run publish
-      run: |
-        poetry config pypi-token.pypi ${{ secrets.PYPI_DEPLOY_TOKEN }}
-        poetry publish --dry-run
+      - name: Dry run publish
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_DEPLOY_TOKEN }}
+          poetry publish --dry-run
 
   deploy:
     name: Deploy to PyPi
@@ -105,21 +103,21 @@ jobs:
     if: ${{ github.event_name == 'release' && github.event.action == 'created' }}
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.9
-    - name: Run image
-      uses: abatilo/actions-poetry@v2.1.6
-      with:
-        poetry-version: 1.2.2
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Run image
+        uses: abatilo/actions-poetry@v2.1.6
+        with:
+          poetry-version: 1.2.2
 
-    - name: Run build
-      run: |
-        poetry build
+      - name: Run build
+        run: |
+          poetry build
 
-    - name: Actual publish
-      run: |
-        poetry config pypi-token.pypi ${{ secrets.PYPI_DEPLOY_TOKEN }}
-        poetry publish
+      - name: Actual publish
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_DEPLOY_TOKEN }}
+          poetry publish
