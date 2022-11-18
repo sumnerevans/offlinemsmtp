@@ -83,7 +83,7 @@ jobs:
       with:
         python-version: 3.9
     - name: Run image
-      uses: abatilo/actions-poetry@v2.1.2
+      uses: abatilo/actions-poetry@v2.1.6
 
     - name: Run build
       run: |
@@ -107,7 +107,7 @@ jobs:
       with:
         python-version: 3.9
     - name: Run image
-      uses: abatilo/actions-poetry@v2.1.2
+      uses: abatilo/actions-poetry@v2.1.6
 
     - name: Run build
       run: |
