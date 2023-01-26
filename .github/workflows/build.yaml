@@ -18,38 +18,15 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
-      - name: Run image
-        uses: abatilo/actions-poetry@v2.1.6
-        with:
-          poetry-version: 1.2.2
 
-      - run: poetry install
-
-      - name: pre-commit
+      - name: Install dependencies
         run: |
-          poetry run pre-commit run -av trailing-whitespace
-          poetry run pre-commit run -av end-of-file-fixer
-          poetry run pre-commit run -av check-yaml
-          poetry run pre-commit run -av check-added-large-files
+          pip install -r dev-requirements.txt
 
-      - if: always()
-        run: poetry check
-
-      - name: flake8
-        if: always()
-        run: poetry run flake8
-
-      - name: mypy offlinemsmtp
-        if: always()
-        run: poetry run mypy offlinemsmtp
-
-      - name: black --check .
-        if: always()
-        run: poetry run black --check .
-
-      - name: custom style check
-        if: always()
-        run: poetry run ./cicd/custom_style_check.py
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --verbose --all-files
 
   build:
     runs-on: ubuntu-latest
@@ -60,38 +37,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
-      - name: Run image
-        uses: abatilo/actions-poetry@v2.1.6
-        with:
-          poetry-version: 1.2.2
 
-      - name: Run build
+      - name: Install dependencies
         run: |
-          poetry build
+          pip install -r dev-requirements.txt
 
-  test_deploy:
-    name: Test Deploy to PyPi
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      - name: Run image
-        uses: abatilo/actions-poetry@v2.1.6
-        with:
-          poetry-version: 1.2.2
-
-      - name: Run build
-        run: |
-          poetry build
-
-      - name: Dry run publish
-        run: |
-          poetry config pypi-token.pypi ${{ secrets.PYPI_DEPLOY_TOKEN }}
-          poetry publish --dry-run
+      - run: flit build
 
   deploy:
     name: Deploy to PyPi
@@ -99,8 +50,11 @@ jobs:
     needs:
       - lint
       - build
-      - test_deploy
     if: ${{ github.event_name == 'release' && github.event.action == 'created' }}
+
+    env:
+      FLIT_USERNAME: "__token__"
+      FLIT_PASSWORD: ${{ secrets.PYPI_DEPLOY_TOKEN }}
 
     steps:
       - uses: actions/checkout@v3
@@ -108,16 +62,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
-      - name: Run image
-        uses: abatilo/actions-poetry@v2.1.6
-        with:
-          poetry-version: 1.2.2
 
-      - name: Run build
+      - name: Install dependencies
         run: |
-          poetry build
+          pip install -r dev-requirements.txt
 
-      - name: Actual publish
-        run: |
-          poetry config pypi-token.pypi ${{ secrets.PYPI_DEPLOY_TOKEN }}
-          poetry publish
+      - run: flit build
+
+      - run: flit publish
