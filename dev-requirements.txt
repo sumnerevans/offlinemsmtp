@@ -56,7 +56,7 @@ idna==3.4
     # via requests
 inotify==0.2.10
     # via offlinemsmtp (pyproject.toml)
-isort==5.11.4
+isort==5.12.0
     # via offlinemsmtp (pyproject.toml)
 mccabe==0.7.0
     # via flake8
