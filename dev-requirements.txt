@@ -108,7 +108,7 @@ tomli-w==1.0.0
     # via flit
 types-docutils==0.19.1.2
     # via types-setuptools
-types-setuptools==65.7.0.3
+types-setuptools==67.1.0.0
     # via requirements-parser
 typing-extensions==4.4.0
     # via mypy
