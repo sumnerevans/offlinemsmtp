@@ -8,7 +8,7 @@ attrs==22.2.0
     # via
     #   flake8-annotations
     #   flake8-bugbear
-black==22.12.0
+black==23.1.0
     # via offlinemsmtp (pyproject.toml)
 build==0.10.0
     # via pip-tools
