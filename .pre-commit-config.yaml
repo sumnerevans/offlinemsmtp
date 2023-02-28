@@ -47,4 +47,5 @@ repos:
       - id: custom-style-check
         name: custom style check
         entry: ./cicd/custom_style_check.py
-        language: system
+        language: python
+        additional_dependencies: [termcolor==2.2.0]

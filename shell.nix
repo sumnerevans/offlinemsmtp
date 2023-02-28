@@ -23,6 +23,7 @@ pkgs.mkShell {
   buildInputs = [
     libnotify
     rnix-lsp
+    pre-commit
   ];
 
   propagatedBuildInputs = with python3Packages; [

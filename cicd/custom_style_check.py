@@ -47,25 +47,24 @@ def check_file(path: Path) -> bool:
 
 
 valid = True
-for path in Path("offlinemsmtp").glob("**/*.py"):
-    valid &= check_file(path)
+for path in sys.argv[1:]:
+    if path.endswith(".py"):
+        valid &= check_file(Path(path).absolute())
 
-for path in Path("tests").glob("**/*.py"):
-    valid &= check_file(path)
+if "CHANGELOG.md" in sys.argv:
+    """
+    Checks that the version in the CHANGELOG is the same as the version in ``__init__.py``.
+    """
+    print("Checking version in CHANGELOG is the same as version in __init__")  # noqa: T001
+    with open(Path("offlinemsmtp/__init__.py")) as f:
+        for line in f:
+            if line.startswith("__version__"):
+                version = eval(line.split()[-1])
+                break
+        else:  # nobreak
+            raise AssertionError("No version in offlinemsmtp/__init__.py")
 
-"""
-Checks that the version in the CHANGELOG is the same as the version in ``__init__.py``.
-"""
-with open(Path("offlinemsmtp/__init__.py")) as f:
-    for line in f:
-        if line.startswith("__version__"):
-            version = eval(line.split()[-1])
-            break
-    else:  # nobreak
-        raise AssertionError("No version in offlinemsmtp/__init__.py")
-
-with open(Path("CHANGELOG.md")) as f:
-    assert f.readline().strip() == f"# Version {version}", "Version mismatch: CHANGELOG"
-
+    with open(Path("CHANGELOG.md")) as f:
+        assert f.readline().strip() == f"# Version {version}", "Version mismatch: CHANGELOG"
 
 sys.exit(0 if valid else 1)
