@@ -108,7 +108,7 @@ tomli==2.0.1
     #   pyproject-hooks
 tomli-w==1.0.0
     # via flit
-types-setuptools==67.5.0.0
+types-setuptools==67.6.0.0
     # via requirements-parser
 typing-extensions==4.5.0
     # via mypy
