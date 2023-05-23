@@ -94,7 +94,7 @@ pyproject-hooks==1.0.0
     # via build
 pyyaml==6.0
     # via pre-commit
-requests==2.28.2
+requests==2.31.0
     # via flit
 requirements-parser==0.5.0
     # via offlinemsmtp (pyproject.toml)
