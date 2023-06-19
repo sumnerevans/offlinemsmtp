@@ -78,7 +78,7 @@ pathspec==0.11.1
     # via black
 pip-tools==6.13.0
     # via offlinemsmtp (pyproject.toml)
-platformdirs==3.5.3
+platformdirs==3.6.0
     # via
     #   black
     #   virtualenv
