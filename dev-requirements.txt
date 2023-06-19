@@ -82,7 +82,7 @@ platformdirs==3.5.3
     # via
     #   black
     #   virtualenv
-pre-commit==3.3.2
+pre-commit==3.3.3
     # via offlinemsmtp (pyproject.toml)
 pycodestyle==2.10.0
     # via
