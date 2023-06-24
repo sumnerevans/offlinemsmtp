@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import gi
 
@@ -18,15 +19,19 @@ def notify(message, timeout=None, urgency=Notify.Urgency.LOW):
     if SILENT:
         return None
 
-    # Initialize the notifications if necessary.
-    if not NOTIFICATIONS_INITIALIZED:
-        Notify.init(_APP_NAME)
-        NOTIFICATIONS_INITIALIZED = True
+    try:
+        # Initialize the notifications if necessary.
+        if not NOTIFICATIONS_INITIALIZED:
+            Notify.init(_APP_NAME)
+            NOTIFICATIONS_INITIALIZED = True
 
-    # Create, show, and return the notification
-    notification = Notify.Notification.new(_APP_NAME, message)
-    if timeout:
-        notification.set_timeout(timeout)
-    notification.set_urgency(urgency)
-    notification.show()
-    return notification
+        # Create, show, and return the notification
+        notification = Notify.Notification.new(_APP_NAME, message)
+        if timeout:
+            notification.set_timeout(timeout)
+        notification.set_urgency(urgency)
+        notification.show()
+        return notification
+    except Exception as e:
+        logging.error(f"failed to show notification, panicking: {e}")
+        sys.exit(1)
