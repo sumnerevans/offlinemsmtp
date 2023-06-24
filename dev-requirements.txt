@@ -40,7 +40,7 @@ flake8-annotations==3.0.1
     # via offlinemsmtp (pyproject.toml)
 flake8-bugbear==23.6.5
     # via offlinemsmtp (pyproject.toml)
-flake8-comprehensions==3.12.0
+flake8-comprehensions==3.13.0
     # via offlinemsmtp (pyproject.toml)
 flake8-pep3101==2.0.0
     # via offlinemsmtp (pyproject.toml)
@@ -60,7 +60,7 @@ isort==5.12.0
     # via offlinemsmtp (pyproject.toml)
 mccabe==0.7.0
     # via flake8
-mypy==1.3.0
+mypy==1.4.0
     # via offlinemsmtp (pyproject.toml)
 mypy-extensions==1.0.0
     # via
@@ -78,11 +78,11 @@ pathspec==0.11.1
     # via black
 pip-tools==6.13.0
     # via offlinemsmtp (pyproject.toml)
-platformdirs==3.5.3
+platformdirs==3.8.0
     # via
     #   black
     #   virtualenv
-pre-commit==3.3.2
+pre-commit==3.3.3
     # via offlinemsmtp (pyproject.toml)
 pycodestyle==2.10.0
     # via
@@ -108,13 +108,13 @@ tomli==2.0.1
     #   pyproject-hooks
 tomli-w==1.0.0
     # via flit
-types-setuptools==67.8.0.0
+types-setuptools==68.0.0.0
     # via requirements-parser
 typing-extensions==4.6.3
     # via mypy
 urllib3==2.0.3
     # via requests
-virtualenv==20.23.0
+virtualenv==20.23.1
     # via pre-commit
 wheel==0.40.0
     # via pip-tools
