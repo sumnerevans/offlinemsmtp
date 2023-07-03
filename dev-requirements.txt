@@ -110,7 +110,7 @@ tomli-w==1.0.0
     # via flit
 types-setuptools==68.0.0.0
     # via requirements-parser
-typing-extensions==4.6.3
+typing-extensions==4.7.1
     # via mypy
 urllib3==2.0.3
     # via requests
