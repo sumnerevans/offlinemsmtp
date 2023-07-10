@@ -40,7 +40,7 @@ flake8-annotations==3.0.1
     # via offlinemsmtp (pyproject.toml)
 flake8-bugbear==23.6.5
     # via offlinemsmtp (pyproject.toml)
-flake8-comprehensions==3.13.0
+flake8-comprehensions==3.14.0
     # via offlinemsmtp (pyproject.toml)
 flake8-pep3101==2.0.0
     # via offlinemsmtp (pyproject.toml)
