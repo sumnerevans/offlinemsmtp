@@ -6,41 +6,34 @@
   };
 
   outputs = { self, nixpkgs, flake-utils }:
-    (flake-utils.lib.eachDefaultSystem
-      (system:
-        let
-          pkgs = import nixpkgs { system = system; };
+    (flake-utils.lib.eachDefaultSystem (system:
+      let pkgs = import nixpkgs { system = system; };
+      in {
+        devShells.default = pkgs.mkShell {
           nativeBuildInputs = with pkgs; [
             gobject-introspection
             python3Packages.setuptools
             wrapGAppsHook
           ];
-        in
-        rec {
-          devShells = {
-            default = pkgs.mkShell {
-              inherit nativeBuildInputs;
 
-              buildInputs = with pkgs; [
-                cairo
-                libnotify
-                msmtp
-                pass
-                pkg-config
-                pre-commit
-                rnix-lsp
+          buildInputs = with pkgs; [
+            cairo
+            libnotify
+            msmtp
+            pass
+            pkg-config
+            pre-commit
+            rnix-lsp
 
-                python3
-                python3Packages.pygobject3
-                python3Packages.pycairo
-                python3Packages.pkgconfig
-              ];
-            };
+            python3
+            python3Packages.pygobject3
+            python3Packages.pycairo
+            python3Packages.pkgconfig
+          ];
+        };
 
-            shellHook = ''
-              export SOURCE_DATE_EPOCH=315532800
-            '';
-          };
-        }
-      ));
+        shellHook = ''
+          export SOURCE_DATE_EPOCH=315532800
+        '';
+      }));
 }
