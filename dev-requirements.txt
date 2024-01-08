@@ -88,7 +88,7 @@ pycodestyle==2.11.1
     # via
     #   flake8
     #   flake8-print
-pyflakes==3.1.0
+pyflakes==3.2.0
     # via flake8
 pyproject-hooks==1.0.0
     # via build
