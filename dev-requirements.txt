@@ -12,7 +12,7 @@ black==23.12.1
     # via offlinemsmtp (pyproject.toml)
 build==1.0.3
     # via pip-tools
-certifi==2023.11.17
+certifi==2024.2.2
     # via requests
 cfgv==3.4.0
     # via pre-commit
