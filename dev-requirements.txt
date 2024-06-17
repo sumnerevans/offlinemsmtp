@@ -108,7 +108,7 @@ types-setuptools==69.5.0.20240423
     # via requirements-parser
 typing-extensions==4.11.0
     # via mypy
-urllib3==2.2.1
+urllib3==2.2.2
     # via requests
 virtualenv==20.26.1
     # via pre-commit
