@@ -1,39 +1,46 @@
 {
-  description = "Offline queue daemon for msmtp";
+  description = "offlinemsmtp";
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    (flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = import nixpkgs { system = system; };
-      in {
-        devShells.default = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [
-            gobject-introspection
-            python3Packages.setuptools
-            wrapGAppsHook
-          ];
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      flake-parts,
+    }:
+    (flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "x86_64-linux" ];
+      perSystem =
+        {
+          pkgs,
+          system,
+          ...
+        }:
+        {
+          _module.args.pkgs = import inputs.nixpkgs { inherit system; };
 
-          buildInputs = with pkgs; [
-            cairo
-            libnotify
-            msmtp
-            pass
-            pkg-config
-            pre-commit
-            rnix-lsp
+          packages = rec {
+            default = offlinemsmtp;
+            offlinemsmtp = pkgs.buildGoModule {
+              pname = "offlinemsmtp";
+              version = "unstable";
+              src = self;
+              subPackages = [ "cmd/offlinemsmtp" ];
+              vendorHash = "sha256-3ulYQkthx4PmckR8zwlkXNb5cD2GNu2uwAc/hQCa+r8=";
+            };
+          };
 
-            python3
-            python3Packages.pygobject3
-            python3Packages.pycairo
-            python3Packages.pkgconfig
-          ];
+          devShells.default = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              go
+              msmtp
+              pre-commit
+            ];
+          };
         };
-
-        shellHook = ''
-          export SOURCE_DATE_EPOCH=315532800
-        '';
-      }));
+    });
 }
