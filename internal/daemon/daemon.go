@@ -249,11 +249,11 @@ func (d *Daemon) send(ctx context.Context, msmtpArgs string, message []byte) err
 }
 
 func parseQueueFile(data []byte) (msmtpArgs string, message []byte, err error) {
-	nl := bytes.IndexByte(data, '\n')
-	if nl < 0 {
+	before, after, ok := bytes.Cut(data, []byte("\n"))
+	if !ok {
 		return "", nil, fmt.Errorf("missing newline")
 	}
-	return strings.TrimSpace(string(data[:nl])), data[nl+1:], nil
+	return strings.TrimSpace(string(before)), after, nil
 }
 
 func extractSubject(message []byte) string {
