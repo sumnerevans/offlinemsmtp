@@ -52,7 +52,7 @@ func main() {
 			os.Exit(1)
 		}
 		defer f.Close()
-		logWriter = f
+		logWriter = io.MultiWriter(logWriter, f)
 	}
 	if a.Silent {
 		logWriter = io.Discard
