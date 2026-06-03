@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -38,7 +37,6 @@ type Config struct {
 
 type Daemon struct {
 	Config
-	mu       sync.Mutex
 	queue    []string
 	notifier *notify.Notifier
 }
@@ -62,13 +60,11 @@ func (d *Daemon) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("read outbox directory: %w", err)
 	}
-	d.mu.Lock()
 	for _, e := range entries {
 		if !e.IsDir() && !strings.HasPrefix(e.Name(), ".tmp-") {
 			d.queue = append(d.queue, filepath.Join(d.RootDir, e.Name()))
 		}
 	}
-	d.mu.Unlock()
 
 	// Watch NetworkManager for connectivity changes so we can flush
 	// immediately when the system comes online.
@@ -118,15 +114,10 @@ func (d *Daemon) Run(ctx context.Context) error {
 			log.Info().Uint32("nm_state", state).Msg("network connected, flushing queue")
 		case ei := <-events:
 			log.Info().Str("file", ei.Path()).Msg("new message detected")
-			d.mu.Lock()
 			d.queue = append(d.queue, ei.Path())
-			d.mu.Unlock()
 		case <-ticker.C:
 		}
-		d.mu.Lock()
-		hasItems := len(d.queue) > 0
-		d.mu.Unlock()
-		if hasItems {
+		if len(d.queue) > 0 {
 			d.flushQueue(ctx)
 		}
 	}
@@ -148,10 +139,8 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 		return
 	}
 
-	d.mu.Lock()
 	pending := d.queue
 	d.queue = nil
-	d.mu.Unlock()
 
 	var failed []string
 	for _, path := range pending {
@@ -203,9 +192,7 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 		}
 	}
 
-	d.mu.Lock()
 	d.queue = append(failed, d.queue...)
-	d.mu.Unlock()
 }
 
 func (d *Daemon) buildCmd(msmtpArgs string, extra ...string) []string {
