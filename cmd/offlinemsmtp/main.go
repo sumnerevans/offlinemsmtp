@@ -17,16 +17,17 @@ import (
 )
 
 type args struct {
-	OutboxDir    string   `arg:"-o,--outbox-directory" help:"outbox directory" default:"$HOME/.offlinemsmtp-outbox"`
-	Daemon       bool     `arg:"-d,--daemon" help:"run the offlinemsmtp daemon"`
-	Silent       bool     `arg:"-s,--silent" help:"disable all logging and notifications"`
-	Interval     int      `arg:"-i,--interval" help:"flush interval in seconds" default:"60"`
-	ConfigFile   string   `arg:"-C,--file" help:"msmtp configuration file" default:"$HOME/.msmtprc"`
-	MsmtpPath    string   `arg:"--msmtp-path" help:"path to msmtp binary" default:"msmtp"`
-	SendMailFile string   `arg:"--send-mail-file" help:"only send mail if this file exists"`
-	LogFile      string   `arg:"-l,--logfile" help:"file to write logs to"`
-	LogLevel     string   `arg:"-m,--loglevel" help:"minimum log level (trace/debug/info/warn/error)" default:"info"`
-	MsmtpArgs    []string `arg:"positional" help:"arguments forwarded to msmtp"`
+	OutboxDir        string   `arg:"-o,--outbox-directory" help:"outbox directory" default:"$HOME/.offlinemsmtp-outbox"`
+	Daemon           bool     `arg:"-d,--daemon" help:"run the offlinemsmtp daemon"`
+	Silent           bool     `arg:"-s,--silent" help:"disable all logging and notifications"`
+	Interval         int      `arg:"-i,--interval" help:"flush interval in seconds" default:"60"`
+	DebounceInterval int      `arg:"--debounce-interval" help:"minimum seconds between flushes" default:"10"`
+	ConfigFile       string   `arg:"-C,--file" help:"msmtp configuration file" default:"$HOME/.msmtprc"`
+	MsmtpPath        string   `arg:"--msmtp-path" help:"path to msmtp binary" default:"msmtp"`
+	SendMailFile     string   `arg:"--send-mail-file" help:"only send mail if this file exists"`
+	LogFile          string   `arg:"-l,--logfile" help:"file to write logs to"`
+	LogLevel         string   `arg:"-m,--loglevel" help:"minimum log level (trace/debug/info/warn/error)" default:"info"`
+	MsmtpArgs        []string `arg:"positional" help:"arguments forwarded to msmtp"`
 }
 
 func (args) Description() string {
@@ -65,12 +66,13 @@ func main() {
 	if a.Daemon {
 		logger.Info().Msg("starting offlinemsmtp daemon")
 		d := daemon.New(daemon.Config{
-			RootDir:      a.OutboxDir,
-			ConfigFile:   a.ConfigFile,
-			MsmtpPath:    a.MsmtpPath,
-			SendMailFile: a.SendMailFile,
-			Silent:       a.Silent,
-			Interval:     time.Duration(a.Interval) * time.Second,
+			RootDir:          a.OutboxDir,
+			ConfigFile:       a.ConfigFile,
+			MsmtpPath:        a.MsmtpPath,
+			SendMailFile:     a.SendMailFile,
+			Silent:           a.Silent,
+			Interval:         time.Duration(a.Interval) * time.Second,
+			DebounceInterval: time.Duration(a.DebounceInterval) * time.Second,
 		})
 		if err := d.Run(ctx); err != nil {
 			logger.Fatal().Err(err).Msg("daemon error")

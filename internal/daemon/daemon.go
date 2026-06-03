@@ -24,12 +24,13 @@ var subjectRe = regexp.MustCompile(`(?m)^Subject: ([^\r\n]+)`)
 const sendTimeout = 90 * time.Second
 
 type Config struct {
-	RootDir      string
-	ConfigFile   string
-	MsmtpPath    string
-	SendMailFile string
-	Silent       bool
-	Interval     time.Duration
+	RootDir          string
+	ConfigFile       string
+	MsmtpPath        string
+	SendMailFile     string
+	Silent           bool
+	Interval         time.Duration
+	DebounceInterval time.Duration
 }
 
 type Daemon struct {
@@ -85,8 +86,14 @@ func (d *Daemon) Run(ctx context.Context) error {
 	ticker := time.NewTicker(d.Interval)
 	defer ticker.Stop()
 
+	var lastFlush time.Time
 	for {
-		d.flushQueue(ctx)
+		if d.DebounceInterval == 0 || time.Since(lastFlush) >= d.DebounceInterval {
+			d.flushQueue(ctx)
+			lastFlush = time.Now()
+		} else {
+			log.Debug().Dur("next_in", d.DebounceInterval-time.Since(lastFlush)).Msg("debouncing flush")
+		}
 
 		select {
 		case <-ctx.Done():
