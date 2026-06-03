@@ -132,14 +132,12 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 			continue
 		}
 
-		nl := bytes.IndexByte(data, '\n')
-		if nl < 0 {
-			log.Error().Str("file", path).Msg("malformed queue file: missing newline")
+		msmtpArgs, message, err := parseQueueFile(data)
+		if err != nil {
+			log.Error().Err(err).Str("file", path).Msg("malformed queue file")
 			failed = append(failed, path)
 			continue
 		}
-		msmtpArgs := strings.TrimSpace(string(data[:nl]))
-		message := data[nl+1:]
 
 		if !d.canSend(ctx, msmtpArgs, message) {
 			failed = append(failed, path)
@@ -239,6 +237,14 @@ func (d *Daemon) send(ctx context.Context, msmtpArgs string, message []byte) err
 	cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
 	cmd.Stdin = bytes.NewReader(message)
 	return cmd.Run()
+}
+
+func parseQueueFile(data []byte) (msmtpArgs string, message []byte, err error) {
+	nl := bytes.IndexByte(data, '\n')
+	if nl < 0 {
+		return "", nil, fmt.Errorf("missing newline")
+	}
+	return strings.TrimSpace(string(data[:nl])), data[nl+1:], nil
 }
 
 func extractSubject(message []byte) string {
