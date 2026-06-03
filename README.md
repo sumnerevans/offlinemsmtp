@@ -4,7 +4,7 @@ Allows you to use `msmtp` offline by queuing email until you have an internet
 connection.
 
 [![Build](https://github.com/sumnerevans/offlinemsmtp/actions/workflows/go.yml/badge.svg)](https://github.com/sumnerevans/offlinemsmtp/actions/workflows/go.yml)
-[![LiberaPay Donation Status](https://img.shields.io/liberapay/receives/sumner.svg?logo=liberapay)](https://liberapay.com/sumner/donate)
+[![Sponsor Badge](https://img.shields.io/github/sponsors/sumnerevans?logo=github)](https://github.com/sponsors/sumnerevans)
 
 ## Features
 
