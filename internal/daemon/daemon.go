@@ -86,6 +86,8 @@ func (d *Daemon) Run(ctx context.Context) error {
 	defer ticker.Stop()
 
 	for {
+		d.flushQueue(ctx)
+
 		select {
 		case <-ctx.Done():
 			return nil
@@ -98,8 +100,12 @@ func (d *Daemon) Run(ctx context.Context) error {
 				continue
 			}
 			state, ok := sig.Body[0].(uint32)
+			if !ok {
+				continue
+			}
 			// NM_STATE_CONNECTED_SITE=60, NM_STATE_CONNECTED_GLOBAL=70
-			if !ok || state < 60 {
+			if state < 60 {
+				log.Debug().Uint32("nm_state", state).Msg("network not connected, skipping flush")
 				continue
 			}
 			log.Info().Uint32("nm_state", state).Msg("network connected, flushing queue")
@@ -108,12 +114,13 @@ func (d *Daemon) Run(ctx context.Context) error {
 				return nil
 			}
 			if !event.Has(fsnotify.Create) {
+				log.Debug().Str("file", event.Name).Stringer("op", event.Op).Msg("ignoring non-create event")
 				continue
 			}
 			log.Info().Str("file", event.Name).Msg("new message detected")
 		case <-ticker.C:
+			log.Debug().Msg("ticker fired, flushing queue")
 		}
-		d.flushQueue(ctx)
 	}
 }
 
@@ -131,20 +138,16 @@ func (d *Daemon) isOnline() bool {
 	return ok && connectivity >= 3
 }
 
-func (d *Daemon) sendEnabled() bool {
-	if d.SendMailFile == "" {
-		return true
-	}
-	_, err := os.Stat(d.SendMailFile)
-	return err == nil
-}
-
 func (d *Daemon) flushQueue(ctx context.Context) {
 	log := zerolog.Ctx(ctx)
+	log.Info().Msg("flushing queue")
 
-	if !d.sendEnabled() {
-		d.notifier.Send("offlinemsmtp", "sending email disabled", 5*time.Second, notify.UrgencyLow)
-		return
+	if d.SendMailFile != "" {
+		if _, err := os.Stat(d.SendMailFile); err != nil {
+			log.Debug().Str("send_mail_file", d.SendMailFile).Msg("sending email disabled because SendMailFile not present")
+			d.notifier.Send("Sending email disabled", fmt.Sprintf("Skipping sending emails because %s does not exist", d.SendMailFile), 5*time.Second, notify.UrgencyLow)
+			return
+		}
 	}
 
 	entries, err := os.ReadDir(d.RootDir)

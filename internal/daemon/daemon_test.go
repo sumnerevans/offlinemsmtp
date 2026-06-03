@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -59,25 +58,5 @@ func TestBuildCmd(t *testing.T) {
 		d := &Daemon{Config: Config{ConfigFile: "/home/user/.msmtprc", MsmtpPath: "/usr/bin/msmtp"}}
 		base := []string{"/usr/bin/msmtp", "--debug", "-C", "/home/user/.msmtprc"}
 		assert.Equal(t, base, d.buildCmd(""))
-	})
-}
-
-func TestSendEnabled(t *testing.T) {
-	t.Run("no send-mail-file configured", func(t *testing.T) {
-		d := &Daemon{Config: Config{}}
-		assert.True(t, d.sendEnabled())
-	})
-
-	t.Run("file exists", func(t *testing.T) {
-		f, err := os.CreateTemp(t.TempDir(), "send-mail-file-*")
-		require.NoError(t, err)
-		f.Close()
-		d := &Daemon{Config: Config{SendMailFile: f.Name()}}
-		assert.True(t, d.sendEnabled())
-	})
-
-	t.Run("file absent", func(t *testing.T) {
-		d := &Daemon{Config: Config{SendMailFile: "/nonexistent/offlinemsmtp-test-file"}}
-		assert.False(t, d.sendEnabled())
 	})
 }
