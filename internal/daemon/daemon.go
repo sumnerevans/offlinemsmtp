@@ -63,14 +63,14 @@ func (d *Daemon) Run(ctx context.Context) error {
 	}
 	d.mu.Lock()
 	for _, e := range entries {
-		if !e.IsDir() {
+		if !e.IsDir() && !strings.HasPrefix(e.Name(), ".tmp-") {
 			d.queue = append(d.queue, filepath.Join(d.RootDir, e.Name()))
 		}
 	}
 	d.mu.Unlock()
 
 	events := make(chan inotify.EventInfo, 16)
-	if err := inotify.Watch(d.RootDir, events, inotify.InCloseWrite); err != nil {
+	if err := inotify.Watch(d.RootDir, events, inotify.InMovedTo); err != nil {
 		return fmt.Errorf("watch outbox directory: %w", err)
 	}
 	defer inotify.Stop(events)

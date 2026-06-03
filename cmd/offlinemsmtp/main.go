@@ -76,20 +76,32 @@ func main() {
 		return
 	}
 
-	// Queue mode: save stdin + msmtp args to the outbox.
+	// Queue mode: write to a temp file in the outbox dir, then rename
+	// atomically so the daemon never sees a partially-written file.
 	if err := os.MkdirAll(a.OutboxDir, 0o755); err != nil {
 		logger.Fatal().Err(err).Msg("cannot create outbox directory")
 	}
-	filename := filepath.Join(a.OutboxDir, time.Now().Format("2006-01-02_15-04-05"))
-	f, err := os.Create(filename)
+	tmp, err := os.CreateTemp(a.OutboxDir, ".tmp-*")
 	if err != nil {
-		logger.Fatal().Err(err).Msg("cannot create outbox file")
+		logger.Fatal().Err(err).Msg("cannot create temp file in outbox")
 	}
-	defer f.Close()
+	tmpName := tmp.Name()
 
-	fmt.Fprintln(f, strings.Join(a.MsmtpArgs, " "))
-	if _, err := io.Copy(f, bufio.NewReader(os.Stdin)); err != nil {
+	fmt.Fprintln(tmp, strings.Join(a.MsmtpArgs, " "))
+	if _, err := io.Copy(tmp, bufio.NewReader(os.Stdin)); err != nil {
+		tmp.Close()
+		os.Remove(tmpName)
 		logger.Fatal().Err(err).Msg("cannot write email to outbox")
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmpName)
+		logger.Fatal().Err(err).Msg("cannot close temp file")
+	}
+
+	filename := filepath.Join(a.OutboxDir, time.Now().Format("2006-01-02_15-04-05"))
+	if err := os.Rename(tmpName, filename); err != nil {
+		os.Remove(tmpName)
+		logger.Fatal().Err(err).Msg("cannot move email into outbox")
 	}
 	logger.Info().Str("file", filename).Msg("queued email")
 }
