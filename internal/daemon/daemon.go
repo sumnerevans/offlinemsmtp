@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -37,7 +38,6 @@ type Config struct {
 
 type Daemon struct {
 	Config
-	queue    []string
 	notifier *notify.Notifier
 }
 
@@ -54,16 +54,6 @@ func (d *Daemon) Run(ctx context.Context) error {
 
 	if err := os.MkdirAll(d.RootDir, 0o755); err != nil {
 		return fmt.Errorf("create outbox directory: %w", err)
-	}
-
-	entries, err := os.ReadDir(d.RootDir)
-	if err != nil {
-		return fmt.Errorf("read outbox directory: %w", err)
-	}
-	for _, e := range entries {
-		if !e.IsDir() && !strings.HasPrefix(e.Name(), ".tmp-") {
-			d.queue = append(d.queue, filepath.Join(d.RootDir, e.Name()))
-		}
 	}
 
 	// Watch NetworkManager for connectivity changes so we can flush
@@ -114,12 +104,9 @@ func (d *Daemon) Run(ctx context.Context) error {
 			log.Info().Uint32("nm_state", state).Msg("network connected, flushing queue")
 		case ei := <-events:
 			log.Info().Str("file", ei.Path()).Msg("new message detected")
-			d.queue = append(d.queue, ei.Path())
 		case <-ticker.C:
 		}
-		if len(d.queue) > 0 {
-			d.flushQueue(ctx)
-		}
+		d.flushQueue(ctx)
 	}
 }
 
@@ -139,30 +126,35 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 		return
 	}
 
-	pending := d.queue
-	d.queue = nil
+	entries, err := os.ReadDir(d.RootDir)
+	if err != nil {
+		log.Error().Err(err).Msg("cannot read outbox directory")
+		return
+	}
 
-	var failed []string
-	for _, path := range pending {
-		data, err := os.ReadFile(path)
-		if os.IsNotExist(err) {
+	// ReadDir returns entries sorted by name (= chronological for our
+	// timestamp filenames). Reverse so newest messages are attempted
+	// first; older ones are more likely to have already failed.
+	slices.Reverse(entries)
+	for _, e := range entries {
+		if e.IsDir() || strings.HasPrefix(e.Name(), ".tmp-") {
 			continue
 		}
+		path := filepath.Join(d.RootDir, e.Name())
+
+		data, err := os.ReadFile(path)
 		if err != nil {
 			log.Error().Err(err).Str("file", path).Msg("cannot read queued message")
-			failed = append(failed, path)
 			continue
 		}
 
 		msmtpArgs, message, err := parseQueueFile(data)
 		if err != nil {
 			log.Error().Err(err).Str("file", path).Msg("malformed queue file")
-			failed = append(failed, path)
 			continue
 		}
 
 		if !d.canSend(ctx, msmtpArgs, message) {
-			failed = append(failed, path)
 			continue
 		}
 
@@ -177,11 +169,10 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 		if sendErr != nil {
 			log.Error().Err(sendErr).Str("file", path).Msg("msmtp failed")
 			d.notifier.Send(
-				fmt.Sprintf("Message did not send. Putting back in queue.\nError: %v", sendErr),
+				fmt.Sprintf("Message did not send. Will retry later.\nError: %v", sendErr),
 				30*time.Second,
 				notify.UrgencyCritical,
 			)
-			failed = append(failed, path)
 			continue
 		}
 
@@ -191,8 +182,6 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 			log.Error().Err(err).Str("file", path).Msg("cannot remove sent message")
 		}
 	}
-
-	d.queue = append(failed, d.queue...)
 }
 
 func (d *Daemon) buildCmd(msmtpArgs string, extra ...string) []string {
