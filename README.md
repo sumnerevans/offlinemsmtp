@@ -3,9 +3,7 @@
 Allows you to use `msmtp` offline by queuing email until you have an internet
 connection.
 
-[![Lint and Build](https://github.com/sumnerevans/offlinemsmtp/actions/workflows/build.yaml/badge.svg)](https://github.com/sumnerevans/offlinemsmtp/actions/workflows/build.yaml)
-[![PyPi Version](https://img.shields.io/pypi/v/offlinemsmtp?color=4DC71F&logo=python&logoColor=fff)](https://pypi.org/project/offlinemsmtp/)
-[![AUR Version](https://img.shields.io/aur/version/offlinemsmtp?logo=linux&logoColor=fff)](https://aur.archlinux.org/packages/offlinemsmtp/)
+[![Build](https://github.com/sumnerevans/offlinemsmtp/actions/workflows/go.yml/badge.svg)](https://github.com/sumnerevans/offlinemsmtp/actions/workflows/go.yml)
 [![LiberaPay Donation Status](https://img.shields.io/liberapay/receives/sumner.svg?logo=liberapay)](https://liberapay.com/sumner/donate)
 
 ## Features
@@ -24,22 +22,47 @@ connection.
 
 ## Installation
 
-Using [PyPi](https://pypi.org/project/offlinemsmtp/):
+### Using `go install`
 
-    pip install --user offlinemsmtp
+```
+go install github.com/sumnerevans/offlinemsmtp/cmd/offlinemsmtp@latest
+```
 
-On Arch Linux, you can install the `offlinemsmtp` package from the
-[AUR](https://aur.archlinux.org/packages/offlinemsmtp/). For example, if you use
-`yay`:
+### Using Nix
 
-    yay -S offlinemsmtp
+Run ad-hoc:
+
+```
+nix run github:sumnerevans/offlinemsmtp
+```
+
+Using flakes:
+
+```nix
+{
+  inputs.offlinemsmtp = {
+    url = "github:sumnerevans/offlinemsmtp";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs = { offlinemsmtp, ... }: {
+    // use the package: offlinemsmtp.packages."x86_64-linux".offlinemsmtp
+  };
+}
+```
+
+### From source
+
+```
+git clone https://github.com/sumnerevans/offlinemsmtp
+cd offlinemsmtp
+go build -o offlinemsmtp ./cmd/offlinemsmtp
+```
 
 ## Run the daemon using systemd
 
-Create a file called ``~/.config/systemd/user/offlinemsmtp.service`` with the
-following content (if you installed via the AUR package, a service file was
-already created for you in ``/usr/lib/systemd/user`` so you only need to do this
-step if you want to customize the parameters passed to the daemon):
+Create a file called `~/.config/systemd/user/offlinemsmtp.service` with the
+following content:
 
     [Unit]
     Description=offlinemsmtp
@@ -50,65 +73,52 @@ step if you want to customize the parameters passed to the daemon):
     [Install]
     WantedBy=default.target
 
-Then, enable and start `offlinemsmtp` using systemd:
+Then enable and start it:
 
     systemctl --user daemon-reload
     systemctl --user enable --now offlinemsmtp
 
 ## Usage
 
-`offlinemsmtp` has two components: a daemon for listening to the outbox folder
-and sending the mail when the network is available and a enqueuer for adding
-mail to the send queue.
+`offlinemsmtp` has two components: a daemon that watches the outbox directory
+and sends mail when the network is available, and an enqueuer that adds mail to
+the send queue.
 
-To run the daemon in the current command line (this is useful for testing), run
-this command::
+To run the daemon:
 
     offlinemsmtp --daemon
 
-To enqueue emails, use the `offlinemsmtp` executable without `--daemon`. All
-parameters (with a few caveats described below in [Command Line
-Arguments](#command-line-arguments)) are forwarded on to `msmtp`. Anything
-passed in via standard in will be forwarded over standard in to `msmtp` when the
-mail is sent.
+To enqueue emails, use `offlinemsmtp` without `--daemon`. Pass msmtp arguments
+after `--`. Anything on stdin is forwarded to `msmtp` when the mail is sent:
+
+    offlinemsmtp -C ~/.msmtprc -- -t --read-envelope-from
 
 ### Configuration with Mutt
 
-To use offlinemsmtp with mutt, just replace `msmtp` in your mutt configuration
-file with `offlinemsmtp`. Here is an example:
+Replace `msmtp` in your mutt configuration with `offlinemsmtp`:
 
-    set sendmail = "offlinemsmtp -a personal"
+    set sendmail = "offlinemsmtp -a personal --"
 
 ### Command Line Arguments
 
-offlinemsmtp accepts a number of command line arguments:
-
-- `-h`, `--help` - shows a help message and exits.
-- `-o DIR`, `--outbox-directory DIR` - set the directory to use as the outbox.
-  Defaults to `~/.offlinemsmtp-outbox`.
-- `-d`, `--daemon` - run the offlinemsmtp daemon.
-- `-s`, `--silent` - set to disable all logging and notifications.
-- `-i INTERVAL`, `--interval INTERVAL` - set the interval (in seconds) at which
-  to attempt to flush the send queue. Defaults to 60.
-- `-C FILE`, `--file FILE` - the msmtp configuration file to use.
-- `--send-mail-file FILE` - only send mail if this file exists (defaults to
-  `None` meaning that no file is required for mail sending to be enabled)
-- All remaining arguments are passed to `msmtp`. The `-C` argument is
-  automatically passed to `msmtp`.
-- Anything after a special `--` argument will be passed to `msmtp`. This allows
-  you to pass arguments that may conflict with `offlinemsmtp` arguments to
-  `msmtp`.
+- `-h`, `--help` - show help and exit
+- `-o DIR`, `--outbox-directory DIR` - outbox directory (default: `~/.offlinemsmtp-outbox`)
+- `-d`, `--daemon` - run the daemon
+- `-s`, `--silent` - disable all logging and notifications
+- `-i INTERVAL`, `--interval INTERVAL` - flush interval in seconds (default: 60)
+- `-C FILE`, `--file FILE` - msmtp configuration file (default: `~/.msmtprc`)
+- `--send-mail-file FILE` - only send mail if this file exists
+- `-l FILE`, `--logfile FILE` - write logs to file
+- `-m LEVEL`, `--loglevel LEVEL` - minimum log level: `trace`, `debug`, `info`, `warn`, `error` (default: `warn`)
+- Everything after `--` is passed to `msmtp`
 
 ## Contributing
 
-See the [CONTRIBUTING.md](./CONTRIBUTING.md) document for details on how to
-contribute to the project.
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Other projects
 
-- https://github.com/marlam/msmtp-mirror/tree/master/scripts/msmtpqueue - this
-  is included with `msmtp`, but doesn't have all of the features that I want.
-- https://github.com/dcbaker/py-mailqueued - looks cool, I didn't see it when I
-  was researching, but it's probably better than my implementation, even thought
-  I had a lot of fun doing mine.
-- https://github.com/venkytv/msmtp-offline - it's written in Ruby.
+- https://github.com/marlam/msmtp-mirror/tree/master/scripts/msmtpqueue - included
+  with `msmtp`, but fewer features.
+- https://github.com/dcbaker/py-mailqueued - Python implementation.
+- https://github.com/venkytv/msmtp-offline - Ruby implementation.

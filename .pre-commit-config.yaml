@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         exclude_types: [markdown]
@@ -8,44 +8,14 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-  - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: 1.5.3
+  - repo: https://github.com/tekwizely/pre-commit-golang
+    rev: v1.0.0-rc.2
     hooks:
-      - id: pyproject-fmt
-
-  # black
-  - repo: https://github.com/psf/black
-    rev: 23.12.1
-    hooks:
-      - id: black
-        files: ^offlinemsmtp/.*$
-
-  # isort
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        files: ^offlinemsmtp/.*$
-
-  # flake8
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
-        files: ^offlinemsmtp/.*$
-
-  # mypy
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-termcolor==1.1.3]
-
-  # custom style checks
-  - repo: local
-    hooks:
-      - id: custom-style-check
-        name: custom style check
-        entry: ./cicd/custom_style_check.py
-        language: python
-        additional_dependencies: [termcolor==2.2.0]
+      - id: go-imports-repo
+        args:
+          - "-local"
+          - "github.com/sumnerevans/offlinemsmtp"
+          - "-w"
+      - id: go-vet-repo-mod
+      - id: go-staticcheck-repo-mod
+      - id: go-mod-tidy-repo

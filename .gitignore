@@ -1,2 +1,6 @@
+/offlinemsmtp
+/result
 .direnv
+.vscode/
+*.orig
 .claude/settings.local.json
