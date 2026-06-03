@@ -120,8 +120,8 @@ func (d *Daemon) Run(ctx context.Context) error {
 			if !ok {
 				return nil
 			}
-			if !event.Has(fsnotify.Create) {
-				log.Debug().Str("file", event.Name).Stringer("op", event.Op).Msg("ignoring non-create event")
+			if !event.Has(fsnotify.Create) && !event.Has(fsnotify.Write) {
+				log.Debug().Str("file", event.Name).Stringer("op", event.Op).Msg("ignoring non-create/write event")
 				continue
 			}
 			log.Info().Str("file", event.Name).Msg("new message detected")
@@ -195,10 +195,10 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 }
 
 func (d *Daemon) sendMessage(ctx context.Context, path string, msmtpArgs string, message []byte) bool {
-	log := zerolog.Ctx(ctx)
 	subject := extractSubject(message)
+	log := zerolog.Ctx(ctx).With().Str("subject", subject).Logger()
 
-	sendingHandle := d.notifier.Send("Sending message...", subject, sendTimeout, notify.UrgencyLow)
+	sendingHandle := d.notifier.Send("Sending message...", subject, sendTimeout, notify.UrgencyCritical)
 
 	if !d.isOnline() {
 		d.notifier.Replace(sendingHandle, "Not connected, will send later", subject, 5*time.Second, notify.UrgencyLow)
@@ -211,12 +211,13 @@ func (d *Daemon) sendMessage(ctx context.Context, path string, msmtpArgs string,
 	cmdArgs := d.buildCmd(msmtpArgs)
 	cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
 	cmd.Stdin = bytes.NewReader(message)
+	log.Info().Any("command", cmdArgs).Msg("running command")
 	if sendErr := cmd.Run(); sendErr != nil {
 		log.Err(sendErr).Str("file", path).Msg("msmtp failed")
 		d.notifier.Replace(sendingHandle,
-			fmt.Sprintf("Failed to send, will retry later: %v", sendErr),
-			subject,
-			30*time.Second, notify.UrgencyCritical)
+			fmt.Sprintf("Failed to send '%s'", subject),
+			sendErr.Error(),
+			30*time.Second, notify.UrgencyNormal)
 		return true
 	}
 
