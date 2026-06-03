@@ -62,11 +62,22 @@ func (n *Notifier) Close() {
 }
 
 func (n *Notifier) Send(message string, timeout time.Duration, urgency Urgency) *Handle {
+	return n.Replace(nil, message, timeout, urgency)
+}
+
+// Replace updates an existing notification in place. If handle is nil a new
+// notification is created. The old handle is invalidated.
+func (n *Notifier) Replace(handle *Handle, message string, timeout time.Duration, urgency Urgency) *Handle {
 	if n.silent || n.inner == nil {
 		return nil
 	}
+	var replacesID uint32
+	if handle != nil {
+		replacesID = handle.id
+	}
 	notif := notify.Notification{
 		AppName:       appName,
+		ReplacesID:    replacesID,
 		Summary:       appName,
 		Body:          message,
 		ExpireTimeout: timeout,

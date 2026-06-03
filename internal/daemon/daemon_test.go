@@ -48,19 +48,17 @@ func TestExtractSubject(t *testing.T) {
 }
 
 func TestBuildCmd(t *testing.T) {
-	d := &Daemon{Config: Config{ConfigFile: "/home/user/.msmtprc"}}
-	base := []string{"/usr/bin/env", "msmtp", "--debug", "-C", "/home/user/.msmtprc"}
-
-	t.Run("no extra, no msmtp args", func(t *testing.T) {
+	t.Run("default msmtp path", func(t *testing.T) {
+		d := &Daemon{Config: Config{ConfigFile: "/home/user/.msmtprc", MsmtpPath: "msmtp"}}
+		base := []string{"msmtp", "--debug", "-C", "/home/user/.msmtprc"}
 		assert.Equal(t, base, d.buildCmd(""))
-	})
-
-	t.Run("with pretend flag", func(t *testing.T) {
-		assert.Equal(t, append(base, "-P"), d.buildCmd("", "-P"))
-	})
-
-	t.Run("with msmtp args", func(t *testing.T) {
 		assert.Equal(t, append(base, "-t", "--read-envelope-from"), d.buildCmd("-t --read-envelope-from"))
+	})
+
+	t.Run("custom msmtp path", func(t *testing.T) {
+		d := &Daemon{Config: Config{ConfigFile: "/home/user/.msmtprc", MsmtpPath: "/usr/bin/msmtp"}}
+		base := []string{"/usr/bin/msmtp", "--debug", "-C", "/home/user/.msmtprc"}
+		assert.Equal(t, base, d.buildCmd(""))
 	})
 }
 

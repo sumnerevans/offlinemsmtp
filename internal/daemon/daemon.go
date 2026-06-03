@@ -1,17 +1,14 @@
 package daemon
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -22,15 +19,14 @@ import (
 	"github.com/sumnerevans/offlinemsmtp/internal/notify"
 )
 
-var (
-	hostRe    = regexp.MustCompile(`^host = (.+)`)
-	portRe    = regexp.MustCompile(`^port = (.+)`)
-	subjectRe = regexp.MustCompile(`(?m)^Subject: ([^\r\n]+)`)
-)
+var subjectRe = regexp.MustCompile(`(?m)^Subject: ([^\r\n]+)`)
+
+const sendTimeout = 90 * time.Second
 
 type Config struct {
 	RootDir      string
 	ConfigFile   string
+	MsmtpPath    string
 	SendMailFile string
 	Silent       bool
 	Interval     time.Duration
@@ -39,6 +35,7 @@ type Config struct {
 type Daemon struct {
 	Config
 	notifier *notify.Notifier
+	sysBus   *dbus.Conn
 }
 
 func New(cfg Config) *Daemon {
@@ -59,19 +56,20 @@ func (d *Daemon) Run(ctx context.Context) error {
 	// Watch NetworkManager for connectivity changes so we can flush
 	// immediately when the system comes online.
 	var nmSignals chan *dbus.Signal
-	sysBus, err := dbus.ConnectSystemBus()
+	var err error
+	d.sysBus, err = dbus.ConnectSystemBus()
 	if err != nil {
 		log.Warn().Err(err).Msg("cannot connect to system D-Bus; network state changes will not trigger flush")
 	} else {
-		defer sysBus.Close()
-		if err := sysBus.AddMatchSignal(
+		defer d.sysBus.Close()
+		if err := d.sysBus.AddMatchSignal(
 			dbus.WithMatchInterface("org.freedesktop.NetworkManager"),
 			dbus.WithMatchMember("StateChanged"),
 		); err != nil {
 			log.Warn().Err(err).Msg("cannot watch NetworkManager signals; network state changes will not trigger flush")
 		} else {
 			nmSignals = make(chan *dbus.Signal, 16)
-			sysBus.Signal(nmSignals)
+			d.sysBus.Signal(nmSignals)
 		}
 	}
 
@@ -104,10 +102,25 @@ func (d *Daemon) Run(ctx context.Context) error {
 			log.Info().Uint32("nm_state", state).Msg("network connected, flushing queue")
 		case ei := <-events:
 			log.Info().Str("file", ei.Path()).Msg("new message detected")
+			d.notifier.Send(fmt.Sprintf("New message queued: %s", filepath.Base(ei.Path())), 5*time.Second, notify.UrgencyLow)
 		case <-ticker.C:
 		}
 		d.flushQueue(ctx)
 	}
+}
+
+func (d *Daemon) isOnline() bool {
+	if d.sysBus == nil {
+		return true
+	}
+	obj := d.sysBus.Object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager")
+	v, err := obj.GetProperty("org.freedesktop.NetworkManager.Connectivity")
+	if err != nil {
+		return true
+	}
+	connectivity, ok := v.Value().(uint32)
+	// NM_CONNECTIVITY_LIMITED=3, NM_CONNECTIVITY_FULL=4
+	return ok && connectivity >= 3
 }
 
 func (d *Daemon) sendEnabled() bool {
@@ -128,7 +141,7 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 
 	entries, err := os.ReadDir(d.RootDir)
 	if err != nil {
-		log.Error().Err(err).Msg("cannot read outbox directory")
+		log.Err(err).Msg("cannot read outbox directory")
 		return
 	}
 
@@ -144,101 +157,67 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 
 		data, err := os.ReadFile(path)
 		if err != nil {
-			log.Error().Err(err).Str("file", path).Msg("cannot read queued message")
+			log.Err(err).Str("file", path).Msg("cannot read queued message")
 			continue
 		}
 
 		msmtpArgs, message, err := parseQueueFile(data)
 		if err != nil {
-			log.Error().Err(err).Str("file", path).Msg("malformed queue file")
+			log.Err(err).Str("file", path).Msg("malformed queue file")
 			continue
 		}
 
-		if !d.canSend(ctx, msmtpArgs, message) {
-			continue
-		}
+		d.sendMessage(ctx, path, msmtpArgs, message)
+	}
+}
 
-		sendingHandle := d.notifier.Send(
-			fmt.Sprintf("Sending %s...", filepath.Base(path)),
-			10*time.Minute,
+func (d *Daemon) sendMessage(ctx context.Context, path string, msmtpArgs string, message []byte) {
+	log := zerolog.Ctx(ctx)
+
+	sendingHandle := d.notifier.Send(
+		fmt.Sprintf("Sending %s...", filepath.Base(path)),
+		sendTimeout,
+		notify.UrgencyLow,
+	)
+
+	if !d.isOnline() {
+		subject := extractSubject(message)
+		d.notifier.Replace(sendingHandle,
+			fmt.Sprintf("Not connected, cannot send message with subject: %q", subject),
+			5*time.Second,
 			notify.UrgencyLow,
 		)
-		sendErr := d.send(ctx, msmtpArgs, message)
-		sendingHandle.Close()
+		return
+	}
 
-		if sendErr != nil {
-			log.Error().Err(sendErr).Str("file", path).Msg("msmtp failed")
-			d.notifier.Send(
-				fmt.Sprintf("Message did not send. Will retry later.\nError: %v", sendErr),
-				30*time.Second,
-				notify.UrgencyCritical,
-			)
-			continue
-		}
+	sendCtx, cancel := context.WithTimeout(ctx, sendTimeout)
+	defer cancel()
 
-		log.Info().Str("file", path).Msg("message sent, removing from queue")
-		d.notifier.Send("Message sent successfully. Removing from queue.", 5*time.Second, notify.UrgencyLow)
-		if err := os.Remove(path); err != nil {
-			log.Error().Err(err).Str("file", path).Msg("cannot remove sent message")
-		}
+	sendErr := d.send(sendCtx, msmtpArgs, message)
+	if sendErr != nil {
+		log.Err(sendErr).Str("file", path).Msg("msmtp failed")
+		d.notifier.Replace(sendingHandle,
+			fmt.Sprintf("Message did not send. Will retry later.\nError: %v", sendErr),
+			30*time.Second,
+			notify.UrgencyCritical,
+		)
+		return
+	}
+
+	log.Info().Str("file", path).Msg("message sent, removing from queue")
+	d.notifier.Replace(sendingHandle, "Message sent successfully.", 5*time.Second, notify.UrgencyLow)
+	if err := os.Remove(path); err != nil {
+		log.Err(err).Str("file", path).Msg("cannot remove sent message")
 	}
 }
 
 func (d *Daemon) buildCmd(msmtpArgs string, extra ...string) []string {
-	cmd := []string{"/usr/bin/env", "msmtp", "--debug", "-C", d.ConfigFile}
+	cmd := []string{d.MsmtpPath, "--debug", "-C", d.ConfigFile}
 	cmd = append(cmd, extra...)
 	if msmtpArgs != "" {
 		cmd = append(cmd, strings.Fields(msmtpArgs)...)
 	}
 	return cmd
-}
-
-func (d *Daemon) canSend(ctx context.Context, msmtpArgs string, message []byte) bool {
-	log := zerolog.Ctx(ctx)
-	cmdArgs := d.buildCmd(msmtpArgs, "-P")
-
-	var stdout, stderr bytes.Buffer
-	cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
-	cmd.Stdin = bytes.NewReader(message)
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	_ = cmd.Run()
-
-	var host string
-	var port int
-	scanner := bufio.NewScanner(&stdout)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if m := hostRe.FindStringSubmatch(line); m != nil {
-			host = strings.TrimSpace(m[1])
-		} else if m := portRe.FindStringSubmatch(line); m != nil {
-			p, err := strconv.Atoi(strings.TrimSpace(m[1]))
-			if err == nil {
-				port = p
-			}
-		}
-		if host != "" && port != 0 {
-			break
-		}
-	}
-
-	if host == "" || port == 0 {
-		log.Warn().Msg("could not parse host/port from msmtp pretend output")
-		return false
-	}
-
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), 2*time.Second)
-	if err != nil {
-		subject := extractSubject(message)
-		d.notifier.Send(
-			fmt.Sprintf("Cannot connect to %s:%d to send message with subject: %q", host, port, subject),
-			5*time.Second,
-			notify.UrgencyLow,
-		)
-		return false
-	}
-	conn.Close()
-	return true
 }
 
 func (d *Daemon) send(ctx context.Context, msmtpArgs string, message []byte) error {
