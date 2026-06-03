@@ -1,3 +1,22 @@
+# Version 0.5.0
+
+offlinemsmtp has been rewritten in Go. Behaviour is identical to 0.4.0.
+
+## Breaking changes
+
+* The `--` separator is now required to delimit arguments passed to `msmtp`
+  (e.g. `offlinemsmtp -C ~/.msmtprc -- -t --read-envelope-from`). Previously,
+  unrecognised flags were forwarded automatically.
+* Log levels use zerolog names (`trace`, `debug`, `info`, `warn`, `error`)
+  instead of Python's `DEBUG`, `WARNING`, etc.
+
+## Infrastructure
+
+* Rewritten in Go; no Python runtime or GObject introspection required.
+* Nix flake uses `flake-parts` and `buildGoModule`.
+* pre-commit hooks updated to `pre-commit-golang` (goimports, go vet, staticcheck).
+* GitHub Actions workflow updated for Go build/lint/test matrix.
+
 # Version 0.4.0
 
 * **Dependency change**: the `watchdog` dependency has been replaced by
