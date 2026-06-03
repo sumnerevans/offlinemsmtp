@@ -47,7 +47,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 	d.notifier = notify.New(d.Silent, *log)
 	defer d.notifier.Close()
 
-	d.notifier.Send("offlinemsmtp daemon started", 5*time.Second, notify.UrgencyLow)
+	d.notifier.Send("offlinemsmtp", "daemon started", 5*time.Second, notify.UrgencyLow)
 
 	if err := os.MkdirAll(d.RootDir, 0o755); err != nil {
 		return fmt.Errorf("create outbox directory: %w", err)
@@ -102,7 +102,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 			log.Info().Uint32("nm_state", state).Msg("network connected, flushing queue")
 		case ei := <-events:
 			log.Info().Str("file", ei.Path()).Msg("new message detected")
-			d.notifier.Send(fmt.Sprintf("New message queued: %s", filepath.Base(ei.Path())), 5*time.Second, notify.UrgencyLow)
+			d.notifier.Send("offlinemsmtp", fmt.Sprintf("new message queued: %s", filepath.Base(ei.Path())), 5*time.Second, notify.UrgencyLow)
 		case <-ticker.C:
 		}
 		d.flushQueue(ctx)
@@ -135,7 +135,7 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 	log := zerolog.Ctx(ctx)
 
 	if !d.sendEnabled() {
-		d.notifier.Send("Sending email disabled", 5*time.Second, notify.UrgencyLow)
+		d.notifier.Send("offlinemsmtp", "sending email disabled", 5*time.Second, notify.UrgencyLow)
 		return
 	}
 
@@ -173,20 +173,12 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 
 func (d *Daemon) sendMessage(ctx context.Context, path string, msmtpArgs string, message []byte) {
 	log := zerolog.Ctx(ctx)
+	subject := extractSubject(message)
 
-	sendingHandle := d.notifier.Send(
-		fmt.Sprintf("Sending %s...", filepath.Base(path)),
-		sendTimeout,
-		notify.UrgencyLow,
-	)
+	sendingHandle := d.notifier.Send(subject, "sending...", sendTimeout, notify.UrgencyLow)
 
 	if !d.isOnline() {
-		subject := extractSubject(message)
-		d.notifier.Replace(sendingHandle,
-			fmt.Sprintf("Not connected, cannot send message with subject: %q", subject),
-			5*time.Second,
-			notify.UrgencyLow,
-		)
+		d.notifier.Replace(sendingHandle, subject, "not connected, will retry later", 5*time.Second, notify.UrgencyLow)
 		return
 	}
 
@@ -196,16 +188,14 @@ func (d *Daemon) sendMessage(ctx context.Context, path string, msmtpArgs string,
 	sendErr := d.send(sendCtx, msmtpArgs, message)
 	if sendErr != nil {
 		log.Err(sendErr).Str("file", path).Msg("msmtp failed")
-		d.notifier.Replace(sendingHandle,
-			fmt.Sprintf("Message did not send. Will retry later.\nError: %v", sendErr),
-			30*time.Second,
-			notify.UrgencyCritical,
-		)
+		d.notifier.Replace(sendingHandle, subject,
+			fmt.Sprintf("failed to send, will retry later: %v", sendErr),
+			30*time.Second, notify.UrgencyCritical)
 		return
 	}
 
 	log.Info().Str("file", path).Msg("message sent, removing from queue")
-	d.notifier.Replace(sendingHandle, "Message sent successfully.", 5*time.Second, notify.UrgencyLow)
+	d.notifier.Replace(sendingHandle, subject, "sent successfully", 5*time.Second, notify.UrgencyLow)
 	if err := os.Remove(path); err != nil {
 		log.Err(err).Str("file", path).Msg("cannot remove sent message")
 	}

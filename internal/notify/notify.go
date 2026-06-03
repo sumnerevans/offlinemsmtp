@@ -61,13 +61,13 @@ func (n *Notifier) Close() {
 	}
 }
 
-func (n *Notifier) Send(message string, timeout time.Duration, urgency Urgency) *Handle {
-	return n.Replace(nil, message, timeout, urgency)
+func (n *Notifier) Send(summary, body string, timeout time.Duration, urgency Urgency) *Handle {
+	return n.Replace(nil, summary, body, timeout, urgency)
 }
 
 // Replace updates an existing notification in place. If handle is nil a new
 // notification is created. The old handle is invalidated.
-func (n *Notifier) Replace(handle *Handle, message string, timeout time.Duration, urgency Urgency) *Handle {
+func (n *Notifier) Replace(handle *Handle, summary, body string, timeout time.Duration, urgency Urgency) *Handle {
 	if n.silent || n.inner == nil {
 		return nil
 	}
@@ -78,8 +78,8 @@ func (n *Notifier) Replace(handle *Handle, message string, timeout time.Duration
 	notif := notify.Notification{
 		AppName:       appName,
 		ReplacesID:    replacesID,
-		Summary:       appName,
-		Body:          message,
+		Summary:       summary,
+		Body:          body,
 		ExpireTimeout: timeout,
 		Hints: map[string]dbus.Variant{
 			"urgency": dbus.MakeVariant(byte(urgency)),
