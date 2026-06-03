@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/godbus/dbus/v5"
 	inotify "github.com/rjeczalik/notify"
 	"github.com/rs/zerolog"
 
@@ -69,6 +70,25 @@ func (d *Daemon) Run(ctx context.Context) error {
 	}
 	d.mu.Unlock()
 
+	// Watch NetworkManager for connectivity changes so we can flush
+	// immediately when the system comes online.
+	var nmSignals chan *dbus.Signal
+	sysBus, err := dbus.ConnectSystemBus()
+	if err != nil {
+		log.Warn().Err(err).Msg("cannot connect to system D-Bus; network state changes will not trigger flush")
+	} else {
+		defer sysBus.Close()
+		if err := sysBus.AddMatchSignal(
+			dbus.WithMatchInterface("org.freedesktop.NetworkManager"),
+			dbus.WithMatchMember("StateChanged"),
+		); err != nil {
+			log.Warn().Err(err).Msg("cannot watch NetworkManager signals; network state changes will not trigger flush")
+		} else {
+			nmSignals = make(chan *dbus.Signal, 16)
+			sysBus.Signal(nmSignals)
+		}
+	}
+
 	events := make(chan inotify.EventInfo, 16)
 	if err := inotify.Watch(d.RootDir, events, inotify.InMovedTo); err != nil {
 		return fmt.Errorf("watch outbox directory: %w", err)
@@ -82,6 +102,26 @@ func (d *Daemon) Run(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return nil
+		case sig, ok := <-nmSignals:
+			if !ok {
+				nmSignals = nil
+				continue
+			}
+			if len(sig.Body) == 0 {
+				continue
+			}
+			state, ok := sig.Body[0].(uint32)
+			// NM_STATE_CONNECTED_SITE=60, NM_STATE_CONNECTED_GLOBAL=70
+			if !ok || state < 60 {
+				continue
+			}
+			log.Info().Uint32("nm_state", state).Msg("network connected, flushing queue")
+			d.mu.Lock()
+			hasItems := len(d.queue) > 0
+			d.mu.Unlock()
+			if hasItems {
+				d.flushQueue(ctx)
+			}
 		case ei := <-events:
 			log.Info().Str("file", ei.Path()).Msg("new message detected")
 			d.mu.Lock()
