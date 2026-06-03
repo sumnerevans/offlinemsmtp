@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/godbus/dbus/v5"
-	inotify "github.com/rjeczalik/notify"
 	"github.com/rs/zerolog"
 
 	"github.com/sumnerevans/offlinemsmtp/internal/notify"
@@ -47,11 +47,11 @@ func (d *Daemon) Run(ctx context.Context) error {
 	d.notifier = notify.New(d.Silent, log.With().Str("component", "notifier").Logger())
 	defer d.notifier.Close()
 
-	d.notifier.Send("offlinemsmtp", "daemon started", 5*time.Second, notify.UrgencyLow)
-
 	if err := os.MkdirAll(d.RootDir, 0o755); err != nil {
 		return fmt.Errorf("create outbox directory: %w", err)
 	}
+
+	d.notifier.Send("Listener started", fmt.Sprintf("Watching %s for new messages", d.RootDir), 5*time.Second, notify.UrgencyLow)
 
 	// Watch NetworkManager for connectivity changes so we can flush
 	// immediately when the system comes online.
@@ -73,12 +73,13 @@ func (d *Daemon) Run(ctx context.Context) error {
 		}
 	}
 
-	events := make(chan inotify.EventInfo, 16)
-	if err := inotify.Watch(d.RootDir, events, inotify.InMovedTo); err != nil {
-		log.Warn().Err(err).Msg("cannot watch outbox directory; new messages will be sent on next flush interval")
-		events = nil
-	} else {
-		defer inotify.Stop(events)
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("create file watcher: %w", err)
+	}
+	defer watcher.Close()
+	if err := watcher.Add(d.RootDir); err != nil {
+		return fmt.Errorf("watch outbox directory: %w", err)
 	}
 
 	ticker := time.NewTicker(d.Interval)
@@ -102,9 +103,14 @@ func (d *Daemon) Run(ctx context.Context) error {
 				continue
 			}
 			log.Info().Uint32("nm_state", state).Msg("network connected, flushing queue")
-		case ei := <-events:
-			log.Info().Str("file", ei.Path()).Msg("new message detected")
-			d.notifier.Send("offlinemsmtp", fmt.Sprintf("new message queued: %s", filepath.Base(ei.Path())), 5*time.Second, notify.UrgencyLow)
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return nil
+			}
+			if !event.Has(fsnotify.Create) {
+				continue
+			}
+			log.Info().Str("file", event.Name).Msg("new message detected")
 		case <-ticker.C:
 		}
 		d.flushQueue(ctx)
