@@ -116,25 +116,18 @@ func (d *Daemon) Run(ctx context.Context) error {
 				continue
 			}
 			log.Info().Uint32("nm_state", state).Msg("network connected, flushing queue")
-			d.mu.Lock()
-			hasItems := len(d.queue) > 0
-			d.mu.Unlock()
-			if hasItems {
-				d.flushQueue(ctx)
-			}
 		case ei := <-events:
 			log.Info().Str("file", ei.Path()).Msg("new message detected")
 			d.mu.Lock()
 			d.queue = append(d.queue, ei.Path())
 			d.mu.Unlock()
-			d.flushQueue(ctx)
 		case <-ticker.C:
-			d.mu.Lock()
-			hasItems := len(d.queue) > 0
-			d.mu.Unlock()
-			if hasItems {
-				d.flushQueue(ctx)
-			}
+		}
+		d.mu.Lock()
+		hasItems := len(d.queue) > 0
+		d.mu.Unlock()
+		if hasItems {
+			d.flushQueue(ctx)
 		}
 	}
 }
