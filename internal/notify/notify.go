@@ -5,7 +5,7 @@ import (
 
 	"github.com/esiqveland/notify"
 	"github.com/godbus/dbus/v5"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 )
 
 const appName = "offlinemsmtp"
@@ -35,23 +35,24 @@ type Notifier struct {
 	conn   *dbus.Conn
 	inner  notify.Notifier
 	silent bool
+	log    zerolog.Logger
 }
 
-func New(silent bool) *Notifier {
+func New(silent bool, log zerolog.Logger) *Notifier {
 	if silent {
-		return &Notifier{silent: true}
+		return &Notifier{silent: true, log: log}
 	}
 	conn, err := dbus.SessionBus()
 	if err != nil {
 		log.Warn().Err(err).Msg("cannot connect to D-Bus session bus; notifications disabled")
-		return &Notifier{silent: true}
+		return &Notifier{silent: true, log: log}
 	}
 	inner, err := notify.New(conn)
 	if err != nil {
 		log.Warn().Err(err).Msg("cannot create notifier; notifications disabled")
-		return &Notifier{silent: true}
+		return &Notifier{silent: true, log: log}
 	}
-	return &Notifier{conn: conn, inner: inner}
+	return &Notifier{conn: conn, inner: inner, log: log}
 }
 
 func (n *Notifier) Close() {
@@ -75,7 +76,7 @@ func (n *Notifier) Send(message string, timeout time.Duration, urgency Urgency) 
 	}
 	id, err := n.inner.SendNotification(notif)
 	if err != nil {
-		log.Warn().Err(err).Msg("cannot send desktop notification")
+		n.log.Warn().Err(err).Msg("cannot send desktop notification")
 		return nil
 	}
 	return &Handle{id: id, n: n}

@@ -43,14 +43,12 @@ type Daemon struct {
 }
 
 func New(cfg Config) *Daemon {
-	return &Daemon{
-		Config:   cfg,
-		notifier: notify.New(cfg.Silent),
-	}
+	return &Daemon{Config: cfg}
 }
 
 func (d *Daemon) Run(ctx context.Context) error {
 	log := zerolog.Ctx(ctx)
+	d.notifier = notify.New(d.Silent, *log)
 	defer d.notifier.Close()
 
 	d.notifier.Send("offlinemsmtp daemon started", 5*time.Second, notify.UrgencyLow)
