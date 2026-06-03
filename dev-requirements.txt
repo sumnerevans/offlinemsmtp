@@ -52,7 +52,7 @@ flit-core==3.9.0
     # via flit
 identify==2.5.36
     # via pre-commit
-idna==3.7
+idna==3.18
     # via requests
 inotify==0.2.10
     # via offlinemsmtp (pyproject.toml)
