@@ -53,3 +53,9 @@ The CI runs `goimports`, `go vet`, and `staticcheck` via pre-commit.
 
 Standard Go conventions enforced by `goimports` and `staticcheck`. Export only
 identifiers that need to be used outside the package.
+
+### Commit style
+
+Commits follow [Scoped Commits](https://scopedcommits.com/) style. The scope
+should be the package path relative to the module root (e.g. `internal/daemon`,
+`cmd/offlinemsmtp`). For changes that span the whole repo use `treewide`.
