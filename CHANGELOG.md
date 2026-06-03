@@ -1,3 +1,40 @@
+# Version 1.0.0
+
+offlinemsmtp has been rewritten in Go. In general, the functionality of v0.4.0
+is preserved, however if you were using some uncommonly-used features, you may
+need to update your configuration slightly. This version also relicenses the
+project under under MIT.
+
+## Breaking Changes
+
+- Installation and building now uses the Go tooling. You can no longer install
+  from pip. See [the installation instructions](README.md#Installation) for the
+  latest instructions for installation.
+- Arguments passed to `msmtp` must now be separated by `--` (e.g.
+  `offlinemsmtp -C ~/.msmtprc -- -t --read-envelope-from`). Previously,
+  unrecognised flags were forwarded automatically.
+- Log levels use zerolog names (`trace`, `debug`, `info`, `warn`, `error`)
+  instead of Python's `DEBUG`, `WARNING`, etc.
+- `-l` now logs to both STDERR and the specified file simultaneously. This is
+  likely not breaking in most cases, but relevant if you were relying on
+  receiving no output from the program.
+
+## New Features
+
+- **Network Online Detection:** when NetworkManager reports the network has come
+  online, offlinemsmtp tries to send enqueued emails (no need to wait for the
+  next flush interval).
+- **Notifications have been greatly improved.**
+  - They now show the email subject so you can tell which message is being sent,
+    succeeded, or failed.
+  - The "Sending..." notification stays visible until the send completes or
+    fails, then updates in place with the result.
+- **Additional Configuration Options**
+  - `--debounce-interval` (default 10s) prevents repeated sends when multiple
+    filesystem events arrive in quick succession.
+  - `--msmtp-path` lets you specify the full path to the msmtp binary, useful on
+    NixOS and other non-standard PATH setups.
+
 # Version 0.4.0
 
 - **Dependency change**: the `watchdog` dependency has been replaced by
