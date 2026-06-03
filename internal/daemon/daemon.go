@@ -44,7 +44,7 @@ func New(cfg Config) *Daemon {
 
 func (d *Daemon) Run(ctx context.Context) error {
 	log := zerolog.Ctx(ctx)
-	d.notifier = notify.New(d.Silent, *log)
+	d.notifier = notify.New(d.Silent, log.With().Str("component", "notifier").Logger())
 	defer d.notifier.Close()
 
 	d.notifier.Send("offlinemsmtp", "daemon started", 5*time.Second, notify.UrgencyLow)
@@ -75,9 +75,11 @@ func (d *Daemon) Run(ctx context.Context) error {
 
 	events := make(chan inotify.EventInfo, 16)
 	if err := inotify.Watch(d.RootDir, events, inotify.InMovedTo); err != nil {
-		return fmt.Errorf("watch outbox directory: %w", err)
+		log.Warn().Err(err).Msg("cannot watch outbox directory; new messages will be sent on next flush interval")
+		events = nil
+	} else {
+		defer inotify.Stop(events)
 	}
-	defer inotify.Stop(events)
 
 	ticker := time.NewTicker(d.Interval)
 	defer ticker.Stop()

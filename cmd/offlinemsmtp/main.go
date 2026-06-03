@@ -25,7 +25,7 @@ type args struct {
 	MsmtpPath    string   `arg:"--msmtp-path" help:"path to msmtp binary" default:"msmtp"`
 	SendMailFile string   `arg:"--send-mail-file" help:"only send mail if this file exists"`
 	LogFile      string   `arg:"-l,--logfile" help:"file to write logs to"`
-	LogLevel     string   `arg:"-m,--loglevel" help:"minimum log level (trace/debug/info/warn/error)" default:"warn"`
+	LogLevel     string   `arg:"-m,--loglevel" help:"minimum log level (trace/debug/info/warn/error)" default:"info"`
 	MsmtpArgs    []string `arg:"positional" help:"arguments forwarded to msmtp"`
 }
 
