@@ -30,8 +30,20 @@ type args struct {
 	MsmtpArgs        []string `arg:"positional" help:"arguments forwarded to msmtp"`
 }
 
+var _ arg.Versioned = (*args)(nil)
+var _ arg.Epilogued = (*args)(nil)
+var _ arg.Described = (*args)(nil)
+
+func (args) Version() string {
+	return "offlinemsmtp v1.0.0"
+}
+
 func (args) Description() string {
 	return "offlinemsmtp -- offline wrapper for msmtp"
+}
+
+func (args) Epilogue() string {
+	return "For more information visit https://github.com/sumnerevans/offlinemsmtp"
 }
 
 func main() {
