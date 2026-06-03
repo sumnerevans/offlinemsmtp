@@ -134,21 +134,13 @@ func (d *Daemon) isOnline() bool {
 		return true
 	}
 	connectivity, ok := v.Value().(uint32)
-	// NM_CONNECTIVITY_LIMITED=3, NM_CONNECTIVITY_FULL=4
-	return ok && connectivity >= 3
+	return ok && connectivity >= 4
 }
 
 func (d *Daemon) flushQueue(ctx context.Context) {
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("operation", "flush").Logger()
 	log.Info().Msg("flushing queue")
-
-	if d.SendMailFile != "" {
-		if _, err := os.Stat(d.SendMailFile); err != nil {
-			log.Debug().Str("send_mail_file", d.SendMailFile).Msg("sending email disabled because SendMailFile not present")
-			d.notifier.Send("Sending email disabled", fmt.Sprintf("Skipping sending emails because %s does not exist", d.SendMailFile), 5*time.Second, notify.UrgencyLow)
-			return
-		}
-	}
+	start := time.Now()
 
 	entries, err := os.ReadDir(d.RootDir)
 	if err != nil {
@@ -156,60 +148,78 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 		return
 	}
 
+	if len(entries) == 0 {
+		log.Info().Msg("no messages to send")
+		return
+	} else if !d.isOnline() {
+		log.Warn().Msg("not online, skipping flush")
+		return
+	} else if d.SendMailFile != "" {
+		if _, err := os.Stat(d.SendMailFile); err != nil {
+			log.Debug().Str("send_mail_file", d.SendMailFile).Msg("sending email disabled because SendMailFile not present")
+			d.notifier.Send("Sending email disabled", fmt.Sprintf("Skipping sending emails because %s does not exist", d.SendMailFile), 5*time.Second, notify.UrgencyLow)
+			return
+		}
+	}
+
 	// ReadDir returns entries sorted by name (= chronological for our
-	// timestamp filenames). Reverse so newest messages are attempted
-	// first; older ones are more likely to have already failed.
+	// timestamp filenames). Reverse so newest messages are attempted first;
+	// older ones are more likely to have already failed.
 	slices.Reverse(entries)
 	for _, e := range entries {
 		if e.IsDir() || strings.HasPrefix(e.Name(), ".tmp-") {
 			continue
 		}
 		path := filepath.Join(d.RootDir, e.Name())
+		log := log.With().Str("file", path).Logger()
 
-		data, err := os.ReadFile(path)
-		if err != nil {
-			log.Err(err).Str("file", path).Msg("cannot read queued message")
+		if data, err := os.ReadFile(path); err != nil {
+			log.Err(err).Msg("cannot read queued message")
 			continue
-		}
-
-		msmtpArgs, message, err := parseQueueFile(data)
-		if err != nil {
-			log.Err(err).Str("file", path).Msg("malformed queue file")
+		} else if msmtpArgs, message, err := parseQueueFile(data); err != nil {
+			log.Err(err).Msg("malformed queue file")
 			continue
+		} else if !d.sendMessage(ctx, path, msmtpArgs, message) {
+			break
 		}
-
-		d.sendMessage(ctx, path, msmtpArgs, message)
 	}
+
+	log.Info().TimeDiff("elapsed_ms", time.Now(), start).Int("entry_count", len(entries)).Msg("queue flush complete")
 }
 
-func (d *Daemon) sendMessage(ctx context.Context, path string, msmtpArgs string, message []byte) {
+func (d *Daemon) sendMessage(ctx context.Context, path string, msmtpArgs string, message []byte) bool {
 	log := zerolog.Ctx(ctx)
 	subject := extractSubject(message)
 
-	sendingHandle := d.notifier.Send(subject, "sending...", sendTimeout, notify.UrgencyLow)
+	sendingHandle := d.notifier.Send("Sending message...", subject, sendTimeout, notify.UrgencyLow)
 
 	if !d.isOnline() {
-		d.notifier.Replace(sendingHandle, subject, "not connected, will retry later", 5*time.Second, notify.UrgencyLow)
-		return
+		d.notifier.Replace(sendingHandle, "Not connected, will send later", subject, 5*time.Second, notify.UrgencyLow)
+		return false
 	}
 
-	sendCtx, cancel := context.WithTimeout(ctx, sendTimeout)
+	ctx, cancel := context.WithTimeout(ctx, sendTimeout)
 	defer cancel()
 
-	sendErr := d.send(sendCtx, msmtpArgs, message)
-	if sendErr != nil {
+	cmdArgs := d.buildCmd(msmtpArgs)
+	cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
+	cmd.Stdin = bytes.NewReader(message)
+	if sendErr := cmd.Run(); sendErr != nil {
 		log.Err(sendErr).Str("file", path).Msg("msmtp failed")
-		d.notifier.Replace(sendingHandle, subject,
-			fmt.Sprintf("failed to send, will retry later: %v", sendErr),
+		d.notifier.Replace(sendingHandle,
+			fmt.Sprintf("Failed to send, will retry later: %v", sendErr),
+			subject,
 			30*time.Second, notify.UrgencyCritical)
-		return
+		return true
 	}
 
 	log.Info().Str("file", path).Msg("message sent, removing from queue")
-	d.notifier.Replace(sendingHandle, subject, "sent successfully", 5*time.Second, notify.UrgencyLow)
+	d.notifier.Replace(sendingHandle, "Message sent successfully", subject, 5*time.Second, notify.UrgencyLow)
 	if err := os.Remove(path); err != nil {
 		log.Err(err).Str("file", path).Msg("cannot remove sent message")
 	}
+
+	return true
 }
 
 func (d *Daemon) buildCmd(msmtpArgs string, extra ...string) []string {
@@ -221,13 +231,6 @@ func (d *Daemon) buildCmd(msmtpArgs string, extra ...string) []string {
 	return cmd
 }
 
-func (d *Daemon) send(ctx context.Context, msmtpArgs string, message []byte) error {
-	cmdArgs := d.buildCmd(msmtpArgs)
-	cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
-	cmd.Stdin = bytes.NewReader(message)
-	return cmd.Run()
-}
-
 func parseQueueFile(data []byte) (msmtpArgs string, message []byte, err error) {
 	before, after, ok := bytes.Cut(data, []byte("\n"))
 	if !ok {
@@ -236,9 +239,12 @@ func parseQueueFile(data []byte) (msmtpArgs string, message []byte, err error) {
 	return strings.TrimSpace(string(before)), after, nil
 }
 
-func extractSubject(message []byte) string {
+func extractSubject(message []byte) (s string) {
 	if m := subjectRe.FindSubmatch(message); m != nil {
-		return string(m[1])
+		s = string(m[1])
 	}
-	return "<no subject>"
+	if s == "" {
+		s = "<no subject>"
+	}
+	return
 }
