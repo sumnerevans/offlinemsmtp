@@ -25,7 +25,7 @@ import (
 var (
 	hostRe    = regexp.MustCompile(`^host = (.+)`)
 	portRe    = regexp.MustCompile(`^port = (.+)`)
-	subjectRe = regexp.MustCompile(`^Subject: (.+)`)
+	subjectRe = regexp.MustCompile(`(?m)^Subject: ([^\r\n]+)`)
 )
 
 type Config struct {
@@ -257,11 +257,8 @@ func parseQueueFile(data []byte) (msmtpArgs string, message []byte, err error) {
 }
 
 func extractSubject(message []byte) string {
-	scanner := bufio.NewScanner(bytes.NewReader(message))
-	for scanner.Scan() {
-		if m := subjectRe.FindStringSubmatch(scanner.Text()); m != nil {
-			return m[1]
-		}
+	if m := subjectRe.FindSubmatch(message); m != nil {
+		return string(m[1])
 	}
 	return "<no subject>"
 }
