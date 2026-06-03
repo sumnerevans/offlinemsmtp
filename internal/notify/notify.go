@@ -8,8 +8,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const appName = "offlinemsmtp"
-
 type Urgency byte
 
 const (
@@ -62,22 +60,10 @@ func (n *Notifier) Close() {
 }
 
 func (n *Notifier) Send(summary, body string, timeout time.Duration, urgency Urgency) *Handle {
-	return n.Replace(nil, summary, body, timeout, urgency)
-}
-
-// Replace updates an existing notification in place. If handle is nil a new
-// notification is created. The old handle is invalidated.
-func (n *Notifier) Replace(handle *Handle, summary, body string, timeout time.Duration, urgency Urgency) *Handle {
 	if n.silent || n.inner == nil {
 		return nil
 	}
-	var replacesID uint32
-	if handle != nil {
-		replacesID = handle.id
-	}
 	notif := notify.Notification{
-		AppName:       appName,
-		ReplacesID:    replacesID,
 		Summary:       summary,
 		Body:          body,
 		ExpireTimeout: timeout,
@@ -91,4 +77,12 @@ func (n *Notifier) Replace(handle *Handle, summary, body string, timeout time.Du
 		return nil
 	}
 	return &Handle{id: id, n: n}
+}
+
+// Replace closes handle and sends a fresh notification. Using ReplacesID
+// does not reliably update urgency on most notification servers, so we
+// close and recreate instead.
+func (n *Notifier) Replace(handle *Handle, summary, body string, timeout time.Duration, urgency Urgency) *Handle {
+	handle.Close()
+	return n.Send(summary, body, timeout, urgency)
 }
