@@ -26,7 +26,9 @@ func (h *Handle) Close() {
 	if h == nil || h.n == nil || h.n.inner == nil {
 		return
 	}
-	_, _ = h.n.inner.CloseNotification(h.id)
+	if _, err := h.n.inner.CloseNotification(h.id); err != nil {
+		h.n.log.Debug().Err(err).Msg("cannot close notification")
+	}
 }
 
 type Notifier struct {
