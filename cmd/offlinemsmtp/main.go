@@ -114,7 +114,7 @@ func main() {
 		logger.Fatal().Err(err).Msg("cannot close temp file")
 	}
 
-	filename := filepath.Join(a.OutboxDir, time.Now().Format("2006-01-02_15-04-05"))
+	filename := filepath.Join(a.OutboxDir, time.Now().Format("2006-01-02_15-04-05.000000000"))
 	if err := os.Rename(tmpName, filename); err != nil {
 		os.Remove(tmpName)
 		logger.Fatal().Err(err).Msg("cannot move email into outbox")
