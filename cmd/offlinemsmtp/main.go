@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -104,7 +103,7 @@ func main() {
 	tmpName := tmp.Name()
 
 	fmt.Fprintln(tmp, strings.Join(a.MsmtpArgs, " "))
-	if _, err := io.Copy(tmp, bufio.NewReader(os.Stdin)); err != nil {
+	if _, err := io.Copy(tmp, os.Stdin); err != nil {
 		tmp.Close()
 		os.Remove(tmpName)
 		logger.Fatal().Err(err).Msg("cannot write email to outbox")
