@@ -146,7 +146,7 @@ func (d *Daemon) isOnline() bool {
 
 func (d *Daemon) flushQueue(ctx context.Context) {
 	log := zerolog.Ctx(ctx).With().Str("operation", "flush").Logger()
-	log.Info().Msg("flushing queue")
+	log.Debug().Msg("flushing queue")
 	start := time.Now()
 
 	allEntries, err := os.ReadDir(d.RootDir)
@@ -215,7 +215,7 @@ func (d *Daemon) sendMessage(ctx context.Context, path string, msmtpArgs string,
 	cmdArgs := d.buildCmd(msmtpArgs)
 	cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
 	cmd.Stdin = bytes.NewReader(message)
-	log.Info().Any("command", cmdArgs).Msg("running command")
+	log.Debug().Any("command", cmdArgs).Msg("running command")
 	if sendErr := cmd.Run(); sendErr != nil {
 		log.Err(sendErr).Str("file", path).Msg("msmtp failed")
 		d.notifier.Replace(sendingHandle,
