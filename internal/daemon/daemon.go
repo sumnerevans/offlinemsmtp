@@ -124,7 +124,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 				log.Debug().Str("file", event.Name).Stringer("op", event.Op).Msg("ignoring non-create/write event")
 				continue
 			}
-			log.Info().Str("file", event.Name).Msg("new message detected")
+			log.Info().Str("file", event.Name).Msg("new file detected")
 		case <-ticker.C:
 			log.Debug().Msg("ticker fired, flushing queue")
 		}
@@ -149,10 +149,17 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 	log.Info().Msg("flushing queue")
 	start := time.Now()
 
-	entries, err := os.ReadDir(d.RootDir)
+	allEntries, err := os.ReadDir(d.RootDir)
 	if err != nil {
 		log.Err(err).Msg("cannot read outbox directory")
 		return
+	}
+
+	var entries []os.DirEntry
+	for _, e := range allEntries {
+		if !e.IsDir() && !strings.HasPrefix(e.Name(), ".tmp-") {
+			entries = append(entries, e)
+		}
 	}
 
 	if len(entries) == 0 {
@@ -174,9 +181,6 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 	// older ones are more likely to have already failed.
 	slices.Reverse(entries)
 	for _, e := range entries {
-		if e.IsDir() || strings.HasPrefix(e.Name(), ".tmp-") {
-			continue
-		}
 		path := filepath.Join(d.RootDir, e.Name())
 		log := log.With().Str("file", path).Logger()
 
