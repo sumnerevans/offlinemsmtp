@@ -141,6 +141,7 @@ func (d *Daemon) isOnline() bool {
 		return true
 	}
 	connectivity, ok := v.Value().(uint32)
+	// NM_CONNECTIVITY_FULL = 4
 	return ok && connectivity >= 4
 }
 
@@ -149,26 +150,24 @@ func (d *Daemon) flushQueue(ctx context.Context) {
 	log.Debug().Msg("flushing queue")
 	start := time.Now()
 
-	allEntries, err := os.ReadDir(d.RootDir)
+	entries, err := os.ReadDir(d.RootDir)
 	if err != nil {
 		log.Err(err).Msg("cannot read outbox directory")
 		return
 	}
-
-	var entries []os.DirEntry
-	for _, e := range allEntries {
-		if !e.IsDir() && !strings.HasPrefix(e.Name(), ".tmp-") {
-			entries = append(entries, e)
-		}
-	}
+	entries = slices.DeleteFunc(entries, func(e os.DirEntry) bool {
+		return e.IsDir() || strings.HasPrefix(e.Name(), ".tmp-")
+	})
 
 	if len(entries) == 0 {
 		log.Info().Msg("no messages to send")
 		return
-	} else if !d.isOnline() {
+	}
+	if !d.isOnline() {
 		log.Warn().Msg("not online, skipping flush")
 		return
-	} else if d.SendMailFile != "" {
+	}
+	if d.SendMailFile != "" {
 		if _, err := os.Stat(d.SendMailFile); err != nil {
 			log.Debug().Str("send_mail_file", d.SendMailFile).Msg("sending email disabled because SendMailFile not present")
 			d.notifier.Send("Sending email disabled", fmt.Sprintf("Skipping sending emails because %s does not exist", d.SendMailFile), 5*time.Second, notify.UrgencyLow)
@@ -234,9 +233,8 @@ func (d *Daemon) sendMessage(ctx context.Context, path string, msmtpArgs string,
 	return true
 }
 
-func (d *Daemon) buildCmd(msmtpArgs string, extra ...string) []string {
+func (d *Daemon) buildCmd(msmtpArgs string) []string {
 	cmd := []string{d.MsmtpPath, "--debug", "-C", d.ConfigFile}
-	cmd = append(cmd, extra...)
 	if msmtpArgs != "" {
 		cmd = append(cmd, strings.Fields(msmtpArgs)...)
 	}
@@ -251,12 +249,9 @@ func parseQueueFile(data []byte) (msmtpArgs string, message []byte, err error) {
 	return strings.TrimSpace(string(before)), after, nil
 }
 
-func extractSubject(message []byte) (s string) {
+func extractSubject(message []byte) string {
 	if m := subjectRe.FindSubmatch(message); m != nil {
-		s = string(m[1])
+		return string(m[1])
 	}
-	if s == "" {
-		s = "<no subject>"
-	}
-	return
+	return "<no subject>"
 }
