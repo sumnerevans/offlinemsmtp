@@ -62,7 +62,7 @@ func (n *Notifier) Close() {
 }
 
 func (n *Notifier) Send(summary, body string, timeout time.Duration, urgency Urgency) *Handle {
-	if n.silent || n.inner == nil {
+	if n.silent {
 		return nil
 	}
 	notif := notify.Notification{
