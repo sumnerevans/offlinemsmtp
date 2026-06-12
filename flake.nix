@@ -30,7 +30,7 @@
               version = "unstable";
               src = self;
               subPackages = [ "cmd/offlinemsmtp" ];
-              vendorHash = "sha256-ilgfbfeeRKEAekxDPTL3RTSWhpJAO8sCBB/Chn2W7dU=";
+              vendorHash = "sha256-ktxHidap3bqDSKpGtc2ZEGnpjLFf/n3ahBhVNAARPKg=";
             };
           };
 
