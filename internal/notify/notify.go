@@ -66,6 +66,7 @@ func (n *Notifier) Send(summary, body string, timeout time.Duration, urgency Urg
 		return nil
 	}
 	notif := notify.Notification{
+		AppName:       "offlinemsmtp",
 		Summary:       summary,
 		Body:          body,
 		ExpireTimeout: timeout,
