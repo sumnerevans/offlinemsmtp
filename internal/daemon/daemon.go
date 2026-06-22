@@ -120,8 +120,12 @@ func (d *Daemon) Run(ctx context.Context) error {
 			if !ok {
 				return nil
 			}
-			if !event.Has(fsnotify.Create) && !event.Has(fsnotify.Write) {
-				log.Debug().Str("file", event.Name).Stringer("op", event.Op).Msg("ignoring non-create/write event")
+			if !event.Has(fsnotify.Create) && !event.Has(fsnotify.Write) && !event.Has(fsnotify.Rename) {
+				log.Debug().Str("file", event.Name).Stringer("op", event.Op).Msg("ignoring event")
+				continue
+			}
+			if strings.HasPrefix(filepath.Base(event.Name), ".tmp-") {
+				log.Debug().Str("file", event.Name).Msg("ignoring tmp file event")
 				continue
 			}
 			log.Info().Str("file", event.Name).Msg("new file detected")
