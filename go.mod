@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/alexflint/go-arg v1.6.1
-	github.com/esiqveland/notify v0.13.3
+	github.com/esiqveland/notify v0.14.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/rs/zerolog v1.35.1
